@@ -1,0 +1,143 @@
++++
+title = "An Introduction to Load Testing with Gatling"
+date = "2016-01-03"
+categories = ["testing","http","scala"]
++++
+
+:source-highlighter: pygments
+
+http://gatling.io[Gatling] is a great tool for load testing. It provides:
+
+- a concise Scala DSL in order to <<describe>>
+- a simple means to <<run>>
+- a nice html <<report>> with all the results
+
+[[report, report]]
+== Start with the end in mind
+
+Let's start by looking at the typical output of a Gatling load test. We have overall distribution of response time for the whole load test:
+
+image::/images/2016-01-03-gatling-global.png[,720,310]
+
+A more detailed response time distribution:
+
+image::/images/2016-01-03-gatling-response-distribution.png[,720,297]
+
+Response time percentiles over the duration of the test:
+
+image::/images/2016-01-03-gatling-response-time.png[,720,299]
+
+And number of requests per second over the duration of the test:
+
+image::/images/2016-01-03-gatling-requests-per-second.png[,720,299]
+
+[[describe]]
+== Describe a Load Test
+
+This is how we would write a simple load test which performs 50 `GET` requests against a server running at `test.com`:
+
+[source,java]
+----
+class SimpleSimulation extends Simulation {
+  //declare a scenario with a simple get request performed 5 times
+  val scn = scenario("myScenario")
+            .exec(http("myRequest").get("http://test.com/page.html"))
+            .repeat(5)
+
+  //run the scenario with 10 concurrent users
+  setUp(scn.users(10))
+}
+----
+
+Gatling refers to load tests as `Simulations` which have one or more `Scenarios`. In the one above we are saying we will have 10 users execute 5 requests each in parallel. We could provide a `Content-Type` header with the request and check for a `200` response code like this:
+
+[source,java]
+----
+http("myRequest")
+  .get("http://test.com/page.html")
+  .header("Content-Type", "text/html")
+  .check(status.is(200))
+----
+
+If we wanted to do a `POST` request with a JSON body and basic authentication, as well as verify something in the response:
+
+[source,java]
+----
+http("myRequest")
+  .post("http://test.com/someresource"))
+  .body(StringBody("""{ "myContent": "myValue" }"""))
+  .asJSON
+  .basicAuth("username", "password")
+  .check(jsonPath("$..someField").is("some value"))
+----
+
+The expression used to extract `someField` from the response is passed to `jsonPath()` and is based on http://goessner.net/articles/JsonPath/[Goessner's JsonPath syntax]. We use `is()` to verify the expected value is equal to `some value`. We can also do other forms of verification on the response json like:
+
+* `not(expectedValue)`: not equal to `expectedValue`
+* `in(sequence)`: to check that a value belongs to the given `sequence`
+* `exists()`, `notExists()`: to check for the presence/absence of a field
+
+For a multipart request with 2 parts and gzip compression:
+
+[source,java]
+----
+http("myRequest")
+  .post("http://test.com/someresource"))
+  .bodyPart(StringBodyPart("""{ "myContent": "myValue" }"""))
+  .bodyPart(RawFileBodyPart("file", "test.txt")
+  .processRequestBody(gzipBody)
+----
+
+We can also create scenarios with multiple requests and use the result from previous requests in subsequent requests like this:
+
+[source,java]
+----
+scenario("myScenario")
+  .exec(http("request1")
+          .post("http://test.com/resource1")
+          .body(StringBody"""{ "myContent": ""}""")
+          .check(jsonPath("$..myResponse.guid").saveAs("guid")))
+  .exec(http("request2")
+          .put("http://test.com/resource2/${guid}")
+          .body(StringBody"""{ "someOtherField": ""}"""))
+----
+`guid` is extracted from the response of the first call using `saveAs("guid")` and used in the path to the `PUT` call.
+
+Scenarios can also be run with a ramp up. If we wanted to run the scenario above with 1000 users with a ramp up of 20 seconds we would do:
+
+[source,java]
+----
+setUp(scn.users(1000).ramp(20))
+----
+
+[[run]]
+== Run a Simulation
+
+There are a number of ways to run Gatling simulations. You can http://gatling.io/#/download[download the bundle], place your simulations under the `user-files/simulations` directory and then run `bin/gatling.sh`.
+
+If you prefer integration with your build system there are plugins for http://gatling.io/docs/2.1.7/extensions/maven_plugin.html[Maven], https://github.com/alphagov/gradle-gatling-plugin[Gradle] and http://gatling.io/docs/2.1.7/extensions/sbt_plugin.html[SBT]. For example, for Maven we just add the dependencies in the `pom.xml`:
+[source,xml]
+----
+<dependencies>
+  <dependency>
+    <groupId>io.gatling.highcharts</groupId>
+    <artifactId>gatling-charts-highcharts</artifactId>
+    <scope>test</scope>
+  </dependency>
+</dependencies>
+
+<build>
+   <plugins>
+     <plugin>
+       <groupId>io.gatling</groupId>
+       <artifactId>gatling-maven-plugin</artifactId>
+     </plugin>
+   </plugins>
+</build>
+----
+
+Place simulations under `src/test/scala/com/company/service` and then in the terminal:
+[source,bash]
+----
+mvn gatling:execute -Dgatling.simulationClass=com.company.service.YourSimulation
+----
