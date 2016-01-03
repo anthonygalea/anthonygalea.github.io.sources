@@ -1,0 +1,638 @@
+/*
+ *                        ___
+ *                       /\_ \
+ *  _____     ___     ___\//\ \      __
+ * /\ '__`\  / __`\  / __`\\ \ \   /'__`\
+ * \ \ \_\ \/\ \_\ \/\ \_\ \\_\ \_/\  __/
+ *  \ \ ,__/\ \____/\ \____//\____\ \____\
+ *   \ \ \/  \/___/  \/___/ \/____/\/____/
+ *    \ \_\
+ *     \/_/
+ *
+ * Designed, built, and released under MIT license by @mdo. Learn more at
+ * https://github.com/poole/poole.
+ */
+
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+@media (min-width: 38em) {
+  html {
+    font-size: 20px;
+  }
+}
+
+body {
+  color: #515151;
+  background-color: #fff;
+  -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+}
+
+/* No `:visited` state is required by default (browsers will use `a`) */
+a {
+  color: #268bd2;
+  text-decoration: none;
+}
+/* `:focus` is linked to `:hover` for basic accessibility */
+a:hover,
+a:focus {
+  text-decoration: underline;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: .5rem;
+  font-weight: bold;
+  line-height: 1.25;
+  color: #2b2b2b;
+  text-rendering: optimizeLegibility;
+}
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+}
+h3 {
+  margin-top: 1.5rem;
+  font-size: 1.25rem;
+}
+h4, h5, h6 {
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+/* Body text */
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+strong {
+  color: #303030;
+}
+
+/* Lists */
+ul, ol, dl {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+dt {
+  font-weight: bold;
+}
+dd {
+  margin-bottom: .5rem;
+}
+
+/* Misc */
+hr {
+  position: relative;
+  margin: 0.5rem 0;
+  border: 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #fff;
+}
+
+abbr {
+  font-size: 85%;
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+}
+abbr[title] {
+  cursor: help;
+  border-bottom: 1px dotted #e5e5e5;
+}
+
+/* Code */
+code,
+pre {
+  font-family: Menlo, Monaco, "Courier New", monospace;
+}
+code {
+  padding: .25em .5em;
+  font-size: 85%;
+  color: #bf616a;
+  background-color: #f9f9f9;
+  border-radius: 3px;
+}
+pre {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  font-size: .8rem;
+  line-height: 1.4;
+  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-all;
+  word-wrap: break-word;
+  background-color: #f9f9f9;
+}
+pre code {
+  padding: 0;
+  font-size: 100%;
+  color: inherit;
+  background-color: transparent;
+}
+
+/* Pygments via Jekyll */
+.highlight {
+  margin-bottom: 1rem;
+  border-radius: 4px;
+}
+.highlight pre {
+  margin-bottom: 0;
+}
+
+/* Quotes */
+blockquote {
+  padding: .5rem 1rem;
+  margin: .8rem 0;
+  color: #7a7a7a;
+  border-left: .25rem solid #e5e5e5;
+}
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+@media (min-width: 30em) {
+  blockquote {
+    padding-right: 5rem;
+    padding-left: 1.25rem;
+  }
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  margin: auto auto 1rem;
+  border-radius: 5px;
+}
+
+/* Tables */
+table {
+  margin: auto auto 1rem;
+  border: 1px solid #e5e5e5;
+  border-collapse: collapse;
+}
+td,
+th {
+  padding: .25rem .5rem;
+  border: 1px solid #e5e5e5;
+}
+tbody tr:nth-child(odd) td,
+tbody tr:nth-child(odd) th {
+  background-color: #f9f9f9;
+}
+
+/*
+ * Container
+ *
+ * Center the page content.
+ */
+.container {
+  max-width: 38rem;
+  padding-left:  1rem;
+  padding-right: 1rem;
+  margin-left:  auto;
+  margin-right: auto;
+}
+
+/*
+ * Posts and pages
+ *
+ * Each post is wrapped in `.post` and is used on default and post layouts. Each
+ * page is wrapped in `.page` and is only used on the page layout.
+ */
+.page,
+.post {
+  margin-bottom: 1em;
+}
+
+/* Blog post or page title */
+.page-title,
+.post-title,
+.post-title a {
+  color: #2b2b2b;
+}
+.page-title,
+.post-title {
+  margin-top: 0;
+}
+
+/* Meta data line below post title */
+.post-date {
+  display: block;
+  margin-top: -.5rem;
+  margin-bottom: 1rem;
+  color: #9a9a9a;
+}
+
+/*
+ * Pagination
+ *
+ * Super lightweight (HTML-wise) blog pagination. `span`s are provide for when
+ * there are no more previous or next posts to show.
+ */
+.pagination {
+  overflow: hidden; /* clearfix */
+  margin-left: -1rem;
+  margin-right: -1rem;
+  font-family: "PT Sans", Helvetica, Arial, sans-serif;
+  color: #ccc;
+  text-align: center;
+}
+
+/* Pagination items can be `span`s or `a`s */
+.pagination-item {
+  display: block;
+  padding: 1rem;
+  border: 1px solid #eee;
+}
+.pagination-item:first-child {
+  margin-bottom: -1px;
+}
+
+/* Only provide a hover state for linked pagination items */
+a.pagination-item:hover {
+  background-color: #f5f5f5;
+}
+
+@media (min-width: 30em) {
+  .pagination {
+    margin: 3rem 0;
+  }
+  .pagination-item {
+    float: left;
+    width: 50%;
+  }
+  .pagination-item:first-child {
+    margin-bottom: 0;
+    border-top-left-radius:    4px;
+    border-bottom-left-radius: 4px;
+  }
+  .pagination-item:last-child {
+    margin-left: -1px;
+    border-top-right-radius:    4px;
+    border-bottom-right-radius: 4px;
+  }
+}
+
+
+
+/*
+ *  __                  __
+ * /\ \                /\ \
+ * \ \ \___   __  __   \_\ \     __
+ *  \ \  _ `\/\ \/\ \  /'_` \  /'__`\
+ *   \ \ \ \ \ \ \_\ \/\ \_\ \/\  __/
+ *    \ \_\ \_\/`____ \ \___,_\ \____\
+ *     \/_/\/_/`/___/> \/__,_ /\/____/
+ *                /\___/
+ *                \/__/
+ *
+ * Designed, built, and released under MIT license by @mdo. Learn more at
+ * https://github.com/poole/hyde.
+ */
+
+
+
+
+/*
+ * Global resets
+ *
+ * Update the foundational and global aspects of the page.
+ */
+html {
+  font-family: "PT Sans", Helvetica, Arial, sans-serif;
+}
+@media (min-width: 48em) {
+  html {
+    font-size: 16px;
+  }
+}
+@media (min-width: 58em) {
+  html {
+    font-size: 20px;
+  }
+}
+
+/*
+ * Sidebar
+ *
+ * Flexible banner for housing site name, intro, and "footer" content. Starts
+ * out above content in mobile and later moves to the side with wider viewports.
+ */
+.sidebar {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: rgba(255,255,255,.5);
+  background-color: #fff;
+}
+
+@media (min-width: 48em) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 16rem;
+    margin-bottom: 1rem;
+  }
+}
+
+.sidebar a {
+  color: #202020;
+  text-decoration: none;
+}
+
+.sidebar-about h1 {
+  color: #fff;
+  margin-top: 0;
+  font-family: "Abril Fatface", serif;
+  font-size: 3.25rem;
+}
+
+.sidebar-nav {
+  margin-bottom: 1rem;
+}
+.sidebar-nav-item {
+  display: block;
+  line-height: 1.75;
+}
+a.sidebar-nav-item:hover,
+a.sidebar-nav-item:focus {
+  text-decoration: underline;
+}
+.sidebar-nav-item.active {
+  font-weight: bold;
+}
+
+
+@media (min-width: 48em) {
+  .content {
+    max-width: 38rem;
+    margin-left: 15rem;
+    margin-right: 2rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
+@media (min-width: 64em) {
+  .content {
+    margin-left: 15rem;
+  }
+}
+
+
+.posts {
+  list-style: none;
+  margin-left: -1rem;
+}
+
+.post p {
+  margin: 0 0 0.5rem 0;
+  text-align: justify;
+}
+
+pre {
+  padding: 5px;
+}
+
+.listingblock > .content, .imageblock > .content {
+  margin-left: 0;
+  margin-right: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.sidebar-about h1 {
+  margin-top: 0;
+  font-size: 2.0rem;
+}
+
+.sidebar-nav {
+  padding-left: 0;
+  list-style: none;
+  margin-bottom: 1rem;
+}
+
+.sidebar-nav .label {
+  color: #fff;
+  background-color: #337ab7;
+}
+
+.post .label {
+  color: #fff;
+  background-color: #337ab7;
+}
+
+.fa-github-square {
+  color: black;
+}
+
+.fa-linkedin-square {
+  color: #1B86BC;
+}
+
+.fa-envelope-square {
+  color: #DB4437;
+}
+
+.fa-rss-square {
+  color: #FFBB1B;
+}
+
+
+
+/* From bootstrap.css 3.3.2 - start */
+.label {
+  display: inline;
+  padding: .2em .6em .3em;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+a.label:hover,
+a.label:focus {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+.label:empty {
+  display: none;
+}
+
+.pagination {
+  display: inline-block;
+  padding-left: 0;
+  margin: 20px 0;
+  border-radius: 4px;
+}
+.pagination > li {
+  display: inline;
+}
+.pagination > li > a,
+.pagination > li > span {
+  position: relative;
+  float: left;
+  padding: 6px 12px;
+  margin-left: -1px;
+  line-height: 1.42857143;
+  color: #337ab7;
+  text-decoration: none;
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+.pagination > li:first-child > a,
+.pagination > li:first-child > span {
+  margin-left: 0;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+.pagination > li:last-child > a,
+.pagination > li:last-child > span {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+.pagination > li > a:hover,
+.pagination > li > span:hover,
+.pagination > li > a:focus,
+.pagination > li > span:focus {
+  color: #23527c;
+  background-color: #eee;
+  border-color: #ddd;
+}
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+  z-index: 2;
+  color: #fff;
+  cursor: default;
+  background-color: #337ab7;
+  border-color: #337ab7;
+}
+.pagination > .disabled > span,
+.pagination > .disabled > span:hover,
+.pagination > .disabled > span:focus,
+.pagination > .disabled > a,
+.pagination > .disabled > a:hover,
+.pagination > .disabled > a:focus {
+  color: #777;
+  cursor: not-allowed;
+  background-color: #fff;
+  border-color: #ddd;
+}
+/* From bootstrap.css 3.3.2 - end */
+
+.label {
+  margin: 0 .25em;
+  background-color: #337ab7;
+}
+
+.posts a.label,
+.post-date a.label {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+.listingblock .pygments .hll { background-color: #49483e }
+.listingblock .pygments  { background: #272822; color: #f8f8f2 }
+.listingblock .pygments .tok-c { color: #75715e } /* Comment */
+.listingblock .pygments .tok-err { color: #960050; background-color: #1e0010 } /* Error */
+.listingblock .pygments .tok-k { color: #66d9ef } /* Keyword */
+.listingblock .pygments .tok-l { color: #ae81ff } /* Literal */
+.listingblock .pygments .tok-n { color: #f8f8f2 } /* Name */
+.listingblock .pygments .tok-o { color: #f92672 } /* Operator */
+.listingblock .pygments .tok-p { color: #f8f8f2 } /* Punctuation */
+.listingblock .pygments .tok-cm { color: #75715e } /* Comment.Multiline */
+.listingblock .pygments .tok-cp { color: #75715e } /* Comment.Preproc */
+.listingblock .pygments .tok-c1 { color: #75715e } /* Comment.Single */
+.listingblock .pygments .tok-cs { color: #75715e } /* Comment.Special */
+.listingblock .pygments .tok-gd { color: #f92672 } /* Generic.Deleted */
+.listingblock .pygments .tok-ge { font-style: italic } /* Generic.Emph */
+.listingblock .pygments .tok-gi { color: #a6e22e } /* Generic.Inserted */
+.listingblock .pygments .tok-gs { font-weight: bold } /* Generic.Strong */
+.listingblock .pygments .tok-gu { color: #75715e } /* Generic.Subheading */
+.listingblock .pygments .tok-kc { color: #66d9ef } /* Keyword.Constant */
+.listingblock .pygments .tok-kd { color: #66d9ef } /* Keyword.Declaration */
+.listingblock .pygments .tok-kn { color: #f92672 } /* Keyword.Namespace */
+.listingblock .pygments .tok-kp { color: #66d9ef } /* Keyword.Pseudo */
+.listingblock .pygments .tok-kr { color: #66d9ef } /* Keyword.Reserved */
+.listingblock .pygments .tok-kt { color: #66d9ef } /* Keyword.Type */
+.listingblock .pygments .tok-ld { color: #e6db74 } /* Literal.Date */
+.listingblock .pygments .tok-m { color: #ae81ff } /* Literal.Number */
+.listingblock .pygments .tok-s { color: #e6db74 } /* Literal.String */
+.listingblock .pygments .tok-na { color: #a6e22e } /* Name.Attribute */
+.listingblock .pygments .tok-nb { color: #f8f8f2 } /* Name.Builtin */
+.listingblock .pygments .tok-nc { color: #a6e22e } /* Name.Class */
+.listingblock .pygments .tok-no { color: #66d9ef } /* Name.Constant */
+.listingblock .pygments .tok-nd { color: #a6e22e } /* Name.Decorator */
+.listingblock .pygments .tok-ni { color: #f8f8f2 } /* Name.Entity */
+.listingblock .pygments .tok-ne { color: #a6e22e } /* Name.Exception */
+.listingblock .pygments .tok-nf { color: #a6e22e } /* Name.Function */
+.listingblock .pygments .tok-nl { color: #f8f8f2 } /* Name.Label */
+.listingblock .pygments .tok-nn { color: #f8f8f2 } /* Name.Namespace */
+.listingblock .pygments .tok-nx { color: #a6e22e } /* Name.Other */
+.listingblock .pygments .tok-py { color: #f8f8f2 } /* Name.Property */
+.listingblock .pygments .tok-nt { color: #f92672 } /* Name.Tag */
+.listingblock .pygments .tok-nv { color: #f8f8f2 } /* Name.Variable */
+.listingblock .pygments .tok-ow { color: #f92672 } /* Operator.Word */
+.listingblock .pygments .tok-w { color: #f8f8f2 } /* Text.Whitespace */
+.listingblock .pygments .tok-mb { color: #ae81ff } /* Literal.Number.Bin */
+.listingblock .pygments .tok-mf { color: #ae81ff } /* Literal.Number.Float */
+.listingblock .pygments .tok-mh { color: #ae81ff } /* Literal.Number.Hex */
+.listingblock .pygments .tok-mi { color: #ae81ff } /* Literal.Number.Integer */
+.listingblock .pygments .tok-mo { color: #ae81ff } /* Literal.Number.Oct */
+.listingblock .pygments .tok-sb { color: #e6db74 } /* Literal.String.Backtick */
+.listingblock .pygments .tok-sc { color: #e6db74 } /* Literal.String.Char */
+.listingblock .pygments .tok-sd { color: #e6db74 } /* Literal.String.Doc */
+.listingblock .pygments .tok-s2 { color: #e6db74 } /* Literal.String.Double */
+.listingblock .pygments .tok-se { color: #ae81ff } /* Literal.String.Escape */
+.listingblock .pygments .tok-sh { color: #e6db74 } /* Literal.String.Heredoc */
+.listingblock .pygments .tok-si { color: #e6db74 } /* Literal.String.Interpol */
+.listingblock .pygments .tok-sx { color: #e6db74 } /* Literal.String.Other */
+.listingblock .pygments .tok-sr { color: #e6db74 } /* Literal.String.Regex */
+.listingblock .pygments .tok-s1 { color: #e6db74 } /* Literal.String.Single */
+.listingblock .pygments .tok-ss { color: #e6db74 } /* Literal.String.Symbol */
+.listingblock .pygments .tok-bp { color: #f8f8f2 } /* Name.Builtin.Pseudo */
+.listingblock .pygments .tok-vc { color: #f8f8f2 } /* Name.Variable.Class */
+.listingblock .pygments .tok-vg { color: #f8f8f2 } /* Name.Variable.Global */
+.listingblock .pygments .tok-vi { color: #f8f8f2 } /* Name.Variable.Instance */
+.listingblock .pygments .tok-il { color: #ae81ff } /* Literal.Number.Integer.Long */
+
+.tableblock p {
+  margin: 0 0 0 0;
+}
+
+.tableblock .MathJax_Display {
+  margin: 0 0;
+}
