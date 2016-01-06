@@ -1,4 +1,19 @@
 {{ if isset .Site.Params "highlight" }}<script src="{{ "/js/highlight.pack.js" | absURL }}"></script>
 <script>hljs.initHighlightingOnLoad();</script>{{ end }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+});
+</script>
 </body>
 </html>

@@ -7,7 +7,7 @@
   <!-- Enable responsiveness on mobile devices-->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 
-  <title>{{ .Title }} &middot; {{ .Site.Author.name }}</title>
+  <title>{{ .Title }}</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="{{ "/css/poole.min.css" | absURL }}">
@@ -39,22 +39,6 @@
     ga('send', 'pageview');
   </script>
   {{ end }}
-
-  <script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [["\\(", "\\)"]],
-      displayMath: [["\\[", "\\]"]],
-      ignoreClass: "nostem|nolatexmath"
-    },
-    asciimath2jax: {
-      delimiters: [["\\$", "\\$"]],
-      ignoreClass: "nostem|noasciimath"
-    },
-    TeX: { equationNumbers: { autoNumber: "none" } }
-  });
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
 </head>
 <body{{ with .Site.Params.theme }} class="{{ . }}"{{ end }}>
 {{ partial "sidebar.html" . }}

@@ -15,6 +15,7 @@ paginate = 42
 [params]
   googleAnalytics = "UA-38752250-1"
   github = "https://github.com/anthonygalea"
+  twitter = "https://twitter.com/_anthonygalea"
   linkedin = "https://at.linkedin.com/in/anthonygalea"
   email = "mailto:anthony.galea@gmail.com"
   rss = true

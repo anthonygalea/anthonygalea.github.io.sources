@@ -5,6 +5,7 @@ categories = ["testing","http","scala"]
 +++
 
 :source-highlighter: pygments
+:toc: right
 
 http://gatling.io[Gatling] is a great tool for load testing. It provides:
 
@@ -17,19 +18,19 @@ http://gatling.io[Gatling] is a great tool for load testing. It provides:
 
 Let's start by looking at the typical output of a Gatling load test. We have overall distribution of response time for the whole load test:
 
-image::/images/2016-01-03-gatling-global.png[,720,310]
+image::/images/2016-01-03-gatling-global.png[]
 
 A more detailed response time distribution:
 
-image::/images/2016-01-03-gatling-response-distribution.png[,720,297]
+image::/images/2016-01-03-gatling-response-distribution.png[]
 
 Response time percentiles over the duration of the test:
 
-image::/images/2016-01-03-gatling-response-time.png[,720,299]
+image::/images/2016-01-03-gatling-response-time.png[]
 
 And number of requests per second over the duration of the test:
 
-image::/images/2016-01-03-gatling-requests-per-second.png[,720,299]
+image::/images/2016-01-03-gatling-requests-per-second.png[]
 
 [[describe]]
 == Describe a Load Test
