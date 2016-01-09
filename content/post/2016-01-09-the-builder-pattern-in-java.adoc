@@ -1,0 +1,144 @@
++++
+title = "The Builder Pattern in Java"
+date = "2016-01-09"
+categories = ["design-patterns","java"]
++++
+
+:source-highlighter: pygments
+:toc: right
+
+The Builder pattern is a `creational design pattern` which can be used to address the telescoping constructor anti-pattern. It accomplishes this by separating the construction of an object from its representation.
+
+== Telescoping constructor anti-pattern
+
+This pattern arises when there are multiple ways of constructing an object, usually because some properties are optional. You can see that as the number of fields for an object increases, the number of constructors we need to provide can grow exponentially:
+
+[source,java]
+----
+public class Person {
+  private String firstName; //required
+  private String surname;   //optional
+  private String address;   //optional
+
+  public Person(String firstName) {
+    this.firstName = firstName;
+  }
+
+  public Person(String firstName, String surname) {
+    this.firstName = firstName;
+    this.surname = surname;
+  }
+
+  public Person(String firstName, String surname, String address) {
+    this.firstName = firstName;
+    this.surname = surname;
+    this.address = address;
+  }
+
+  public Person(String firstName, String address) {
+    this.firstName = firstName;
+    this.address = address;
+  }
+}
+----
+
+== Using a JavaBean
+
+Instead of providing constructors we could write a JavaBean which exposes getters and setters for each field:
+
+[source,java]
+----
+public class Person {
+  private String firstName;
+  private String surname;
+  private String address;
+
+  public getFirstName() {
+    return this.firstName;
+  }
+
+  public setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+
+  ...
+}
+----
+
+and then only call the setters for the fields we want to set:
+[source,java]
+----
+Person person = new Person();
+person.setName("Jack");
+person.setSurname("Johnson");
+----
+
+The problem with this is that the object may be in an inconsistent state partway through its construction. Also, the JavaBeans pattern doesn't allow us to make the class immutable.
+
+== Using a builder
+
+The third option is to use the builder pattern where `Person` is only used to represent a person and `Person.Builder` is responsible for creating objects of type `Person`:
+
+//[Person{bg:skyblue}]}],[;Person.Builder;;|Person.Builder(String name);surname(String);address(String);build(){bg:skyblue}]}],[;Person.Builder;;]-build()       >[Person]
+image::/images/2016-01-09-builder.png[]
+
+This is how we could add a `Builder` to the example above:
+[source,java]
+----
+public class Person {
+  private String firstName;
+  private String surname;
+  private String address;
+
+  private Person(Builder builder) {
+    this.firstName = builder.firstName;
+    this.surname = builder.surname;
+    this.address = builder.address;
+  }
+
+  public static class Builder {
+    private String firstName;
+    private String surname;
+    private String address;
+
+    Builder(String firstName) {
+      this.firstName = firstName;
+    }
+
+    public Builder lastName(String lastName) {
+      this.lastName = lastName;
+      return this;
+    }
+
+    public Builder address(String address) {
+      this.address = address;
+      return this;
+    }
+
+    public createPerson() {
+      return new Person(this);
+    }
+  }
+}
+----
+
+Note that the constructor for `Person` is private, accessible only to the `Builder`. Then we use the builder like this:
+[source,java]
+----
+Person jack = new Person.Builder("Jack").lastName("Johnson")
+                                        .createPerson();
+----
+
+As you can see the client works with a fluent API, that is very easy to write. It is immediately clear that `name` is a required parameter and `lastName` and `address` are optional.
+
+== IntelliJ IDEA refactoring
+
+IntelliJ has a nice https://www.jetbrains.com/idea/help/replace-constructor-with-builder.html[Replace Constructor with Builder] refactoring which allows you to quickly generate a builder and replace the existing constructor call.
+
+image::/images/2016-01-09-refactor-constructor-with-builder.png[]
+
+When you generate the builder you can also use the https://www.jetbrains.com/idea/help/move-refactorings.html[Move Refactoring] to make it an inner class of the class for which it generates an object.
+
+image::/images/2016-01-09-move.png[]
+
+You can find this pattern and many other good practices for Java described in the book https://www.goodreads.com/book/show/105099.Effective_Java_Programming_Language_Guide[Effective Java by Joshua Bloch].

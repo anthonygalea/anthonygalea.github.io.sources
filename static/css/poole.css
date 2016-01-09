@@ -635,6 +635,8 @@ a.label:focus {
   top: 2rem;
   left: 63rem;
   /*left: 80rem;*/
+  overflow: hidden;
+  white-space:nowrap;
 }
 
 #toctitle {
