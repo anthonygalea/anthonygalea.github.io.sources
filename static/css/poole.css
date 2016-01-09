@@ -629,11 +629,11 @@ a.label:focus {
 }
 
 .toc {
-  /*display: none;*/
+  display: none;
   position: fixed;
   /*top: 11.5rem;*/
   top: 2rem;
-  left: 64rem;
+  left: 63rem;
   /*left: 80rem;*/
 }
 
@@ -648,10 +648,15 @@ a.label:focus {
 
 .toc a {
   color: #fff;
+  padding-left: 1rem;
 }
 
 .toc a:hover {
   text-decoration: none;
+}
+
+.toc a.active {
+  border-left: 3px solid #fff;
 }
 
 .toc-bg {
@@ -663,4 +668,10 @@ a.label:focus {
   right: 0;
   bottom: 0;
   background-color: #202020;
+}
+
+@media (min-width: 74em) {
+  .toc {
+    display: block;
+  }
 }
