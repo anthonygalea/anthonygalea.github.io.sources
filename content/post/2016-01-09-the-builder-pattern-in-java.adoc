@@ -79,7 +79,7 @@ The problem with this is that the object may be in an inconsistent state partway
 
 The third option is to use the builder pattern where `Person` is only used to represent a person and `Person.Builder` is responsible for creating objects of type `Person`:
 
-//[Person{bg:skyblue}]}],[;Person.Builder;;|Person.Builder(String name);surname(String);address(String);build(){bg:skyblue}]}],[;Person.Builder;;]-build()       >[Person]
+//[Person{bg:skyblue}]}],[;Person.Builder;;|Person.Builder(String name);surname(String);address(String);createPerson(){bg:skyblue}]}],[;Person.Builder;;]-createPerson()       >[Person]
 image::/images/2016-01-09-builder.png[]
 
 This is how we could add a `Builder` to the example above:
@@ -133,11 +133,11 @@ As you can see the client works with a fluent API, that is very easy to write. I
 
 == IntelliJ IDEA refactoring
 
-IntelliJ has a nice https://www.jetbrains.com/idea/help/replace-constructor-with-builder.html[Replace Constructor with Builder] refactoring which allows you to quickly generate a builder and replace the existing constructor call.
+IntelliJ has a nice https://www.jetbrains.com/idea/help/replace-constructor-with-builder.html[Replace Constructor with Builder] refactoring which allows you to quickly generate a builder and replace the existing constructor call:
 
 image::/images/2016-01-09-refactor-constructor-with-builder.png[]
 
-When you generate the builder you can also use the https://www.jetbrains.com/idea/help/move-refactorings.html[Move Refactoring] to make it an inner class of the class for which it generates an object.
+When you generate the builder you can also use the https://www.jetbrains.com/idea/help/move-refactorings.html[Move Refactoring] to make it an inner class of the class for which it generates an object:
 
 image::/images/2016-01-09-move.png[]
 

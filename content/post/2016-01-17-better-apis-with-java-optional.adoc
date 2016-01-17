@@ -1,0 +1,102 @@
++++
+title = "Better APIs with Java Optional"
+date = "2016-01-17"
+categories = ["java"]
++++
+
+:source-highlighter: pygments
+:toc: right
+
+In java codebases it is very typical to come across code similar to the following:
+[source,java]
+----
+interface PlaneProvider {}
+  Plane getPlane();
+}
+----
+The contract for `PlaneProvider.getPlane()` indicates that a `Plane` will be returned. Typically a client using this interface would use it writing something like this:
+
+[source,java]
+----
+Plane plane = planeProvider.getPlane();
+if (plane != null) {
+  plane.fly();
+}
+----
+
+Notice that if the client doesn't perform the null check and a `null` is returned by `getPlane()` we would get a `NullPointerException` at runtime when we call `plane.fly()`.
+
+== The Groovy ?. operator
+
+Groovy provides the `?.` operator in an attempt to provide a cleaner way to write the client code:
+
+[source,java]
+----
+Plane plane = planeProvider.getPlane()
+plane?.fly()
+----
+
+If `plane` is `null` the call to `fly()` will not be performed.
+
+== Enter Java 8 Optional
+
+Using the new `Optional<T>` type in Java 8 we could rewrite the `PlaneProvider` interface above like this:
+
+[source,java]
+----
+import java.util.Optional;
+
+interface PlaneProvider {}
+  Optional<Plane> getPlane();
+}
+----
+
+Just by reading the signature of `PlaneProvider.getPlane()` we can immediately tell that a plane may or may not be returned. The concrete implementation of `PlaneProvider` would use `Optional.of(somePlane)` to return a value or `Optional.empty()` to indicate what was previously indicated with a `null` value:
+
+[source,java]
+----
+class PlaneProviderImpl implements PlaneProvider {
+  Optional<Plane> getPlane() {
+    havePlane ? Optional.of(plane) : Optional.empty();
+  }
+}
+----
+
+In the client we can then use `Optional.isPresent()` and `Optional.get()` to check for the presence of a value and retrieve it if we want, leading to more readable code:
+
+[source,java]
+----
+Optional<Plane> plane = planeProvider.getPlane();
+if (plane.isPresent())
+  plane.get().fly();
+----
+
+The `Optional` class provides additional methods which support a more functional style when writing code:
+
+[source,java]
+----
+Optional<Plane> plane = planeProvider.getPlane();
+plane.ifPresent(() -> plane.get().fly());
+//or
+plane.ifPresent(Plane::fly);
+----
+
+We can also model the case where a plane cannot be provided by the `PlaneProvider` using `orElse()` and using another object `mySparePlane` as fallback:
+
+[source,java]
+----
+Optional<Plane> plane = planeProvider.getPlane();
+plane.orElse(mySparePlane).fly();
+----
+
+And in the case where we don't have any spare planes we can write:
+
+[source,java]
+----
+Optional<Plane> plane = planeProvider.getPlane();
+plane.orElseThrow(IllegalStateException::new).fly();
+----
+
+== Not on Java 8?
+
+If for some reason you're on a version of Java prior to Java 8 you can still use `Optional` by using the https://code.google.com/p/guava-libraries/wiki/UsingAndAvoidingNullExplained#Optional[Guava] library.
