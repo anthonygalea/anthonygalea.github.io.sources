@@ -7,10 +7,12 @@ categories = ["java"]
 :source-highlighter: pygments
 :toc: right
 
+== Introduction
+
 In java codebases it is very typical to come across code similar to the following:
 [source,java]
 ----
-interface PlaneProvider {}
+interface PlaneProvider {
   Plane getPlane();
 }
 ----
@@ -55,7 +57,7 @@ Just by reading the signature of `PlaneProvider.getPlane()` we can immediately t
 
 [source,java]
 ----
-class PlaneProviderImpl implements PlaneProvider {
+class RyanairPlaneProvider implements PlaneProvider {
   Optional<Plane> getPlane() {
     havePlane ? Optional.of(plane) : Optional.empty();
   }
@@ -81,12 +83,12 @@ plane.ifPresent(() -> plane.get().fly());
 plane.ifPresent(Plane::fly);
 ----
 
-We can also model the case where a plane cannot be provided by the `PlaneProvider` using `orElse()` and using another object `mySparePlane` as fallback:
+We can also model the case where a plane cannot be provided by the `PlaneProvider` using `orElse()` and using another object `sparePlane` as fallback:
 
 [source,java]
 ----
 Optional<Plane> plane = planeProvider.getPlane();
-plane.orElse(mySparePlane).fly();
+plane.orElse(sparePlane).fly();
 ----
 
 And in the case where we don't have any spare planes we can write:

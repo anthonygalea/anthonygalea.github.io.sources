@@ -7,14 +7,16 @@ categories = ["testing","http","scala"]
 :source-highlighter: pygments
 :toc: right
 
-http://gatling.io[Gatling] is a great tool for load testing. It provides:
+== Introduction
+
+Many developers are familiar with the http://jmeter.apache.org/[Apache JMeter] or https://httpd.apache.org/docs/2.2/programs/ab.html[Apache Bench] tools for writing load tests. http://gatling.io[Gatling] is an alternative tool which provides:
 
 - a concise Scala DSL in order to <<describe>>
 - a simple means to <<run>>
 - a nice html <<report>> with all the results
 
-[[report, report]]
-== Start with the end in mind
+[[report]]
+== Report
 
 Let's start by looking at the typical output of a Gatling load test. We have overall distribution of response time for the whole load test:
 
@@ -142,3 +144,10 @@ Place simulations under `src/test/scala/com/company/service` and then in the ter
 ----
 mvn gatling:execute -Dgatling.simulationClass=com.company.service.YourSimulation
 ----
+
+== Conclusion
+
+I have found Gatling to be a very effective tool for load testing. The DSL is succinct and the reports generated provide all the information typically needed out of the box. Other alternatives which I have not yet experimented with are:
+
+* https://github.com/newsapps/beeswithmachineguns[Bees with Machine Guns]
+* http://locust.io/[Locust]

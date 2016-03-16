@@ -672,7 +672,7 @@ a.label:focus {
   background-color: #202020;
 }
 
-@media (min-width: 74em) {
+@media (min-width: 94em) {
   .toc {
     display: block;
   }

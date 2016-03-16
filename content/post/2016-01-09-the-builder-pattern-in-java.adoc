@@ -7,6 +7,8 @@ categories = ["design-patterns","java"]
 :source-highlighter: pygments
 :toc: right
 
+== Introduction
+
 The Builder pattern is a `creational design pattern` which can be used to address the telescoping constructor anti-pattern. It accomplishes this by separating the construction of an object from its representation.
 
 == Telescoping constructor anti-pattern
@@ -140,5 +142,7 @@ image::/images/2016-01-09-refactor-constructor-with-builder.png[]
 When you generate the builder you can also use the https://www.jetbrains.com/idea/help/move-refactorings.html[Move Refactoring] to make it an inner class of the class for which it generates an object:
 
 image::/images/2016-01-09-move.png[]
+
+== Conclusion
 
 You can find this pattern and many other good practices for Java described in the book https://www.goodreads.com/book/show/105099.Effective_Java_Programming_Language_Guide[Effective Java by Joshua Bloch].
