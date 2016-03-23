@@ -1,0 +1,108 @@
++++
+title = "An Astronaut's Guide to Life on Earth - Christian Hadfield"
+date = "2016-03-23"
+categories = ["book-notes"]
++++
+
+:toc: right
+
+In his book https://www.goodreads.com/book/show/18170143-an-astronaut-s-guide-to-life-on-earth[An Astronaut's Guide to Life], Christian Hadfield presents a collection of sometimes counterintuitive lessons he learned during his career as an astronaut.
+
+It is a fun read interspersed with paragraphs like:
+
+[quote]
+____
+At this point, when your hands are covered with blobs of urine and drops are floating around the bathroom, too, it’s usually helpful to remind yourself that you are doing all this in the name of scientific inquiry.
+____
+
+Below you can find some excerpts that have rang a bell while I was reading it.
+
+== On Control and Attitude
+
+[quote]
+____
+Too many variables are out of my control. There’s really just one thing I can control: my attitude during the journey, which is what keeps me feeling steady and stable, and what keeps me headed in the right direction. So I consciously monitor and correct, if necessary, because losing attitude would be far worse than not achieving my goal.
+____
+
+== On Emotion
+
+[quote]
+____
+As I have discovered again and again, things are never as bad (or as good) as they seem at the time.
+____
+
+[quote]
+____
+Our training pushes us to develop a new set of instincts: instead of reacting to danger with a fight-or-flight adrenaline rush, we’re trained to respond unemotionally by immediately prioritizing threats and methodically seeking to defuse them. We go from wanting to bolt for the exit to wanting to engage and understand what’s going wrong, then fix it.
+____
+
+[quote]
+____
+When you see red, count to 10.
+____
+
+== On taking Risks and having a Plan
+
+[quote]
+____
+To me, the only good reason to take a risk is that there’s a decent possibility of a reward that outweighs the hazard.
+____
+
+[quote]
+____
+A lot of people talk about expecting the best but preparing for the worst, but I think that’s a seductively misleading concept. There’s never just one “worst.” Almost always there’s a whole spectrum of bad possibilities. The only thing that would really qualify as the worst would be not having a plan for how to cope.
+____
+
+[quote]
+____
+Part of preparing for the worst is keeping in mind that your sim itself may be based on the wrong assumptions, in which case you’ll draw the wrong, perfectly polished conclusions.
+____
+
+== On Criticism
+
+[quote]
+____
+In any field, it’s a plus if you view criticism as potentially helpful advice rather than as a personal attack.
+____
+
+== On Success
+
+[quote]
+____
+Early success is a terrible teacher. You’re essentially being rewarded for a lack of preparation, so when you find yourself in a situation where you must prepare, you can’t do it. You don’t know how.
+____
+
+== On Iatrogenics
+
+[quote]
+____
+Just as a panel of hairdressers is likely to recommend that you change your hairstyle, a panel of surgeons is likely to recommend surgery.
+____
+
+== On Convincing Others
+
+[quote]
+____
+You can present all the random sample studies you want to prove that it’s safe to walk under a ladder, but a superstitious person will still avoid that ladder.
+____
+
+== On Knowledge
+
+[quote]
+____
+You don’t yet know what you don’t know—and regardless of your abilities, your experience and your level of authority, there will definitely be something you don’t know.
+____
+
+== On Leadership
+
+[quote]
+____
+Ultimately, leadership is not about glorious crowning acts. It’s about keeping your team focused on a goal and motivated to do their best to achieve it, especially when the stakes are high and the consequences really matter. It is about laying the groundwork for others’ success, and then standing back and letting them shine.
+____
+
+== On Humility
+
+[quote]
+____
+The most important lessons I’ve learned ... to value the wisdom of humility, as well as the sense of perspective it gives you.
+____
