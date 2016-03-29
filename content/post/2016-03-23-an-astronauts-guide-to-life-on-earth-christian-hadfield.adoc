@@ -6,9 +6,7 @@ categories = ["book-notes"]
 
 :toc: right
 
-In his book https://www.goodreads.com/book/show/18170143-an-astronaut-s-guide-to-life-on-earth[An Astronaut's Guide to Life], Christian Hadfield presents a collection of sometimes counterintuitive lessons he learned during his career as an astronaut.
-
-It is a fun read interspersed with paragraphs like:
+In his book https://www.goodreads.com/book/show/18170143-an-astronaut-s-guide-to-life-on-earth[An Astronaut's Guide to Life on Earth], Christian Hadfield presents a collection of sometimes counterintuitive lessons he learned during his career as an astronaut. It is a fun read interspersed with paragraphs like:
 
 [quote]
 ____
