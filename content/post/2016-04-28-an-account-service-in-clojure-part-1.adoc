@@ -1,0 +1,206 @@
++++
+title = "An account service in Clojure - Part 1"
+date = "2016-04-28"
+categories = ["clojure"]
++++
+
+:source-highlighter: pygments
+:toc: right
+
+== Introduction
+
+In this post I will give a walkthrough of building a simple account service in clojure. Specifically the service will provide the possibility of:
+
+* creating an account with some initial balance
+* and transferring some amount from one account to another.
+
+== Install Leiningen
+
+http://leiningen.org/[Leiningen] provides build automation and dependency management when working with Clojure projects. If you don't already have it installed you will need to install it. If you're onn Mac OS and using `brew` you can just open the shell and run `brew install leiningen`. If you're on another platform follow the instructions at http://leiningen.org[leiningen.org]. After installing `leiningen` you should be able to open a shell and run `lein --version`:
+[source, bash]
+----
+$ lein --version
+Leiningen 2.6.1 on Java 1.8.0_31 Java HotSpot(TM) 64-Bit Server VM
+----
+
+== Create a project
+
+With `leiningen` installed run `lein new account-service`:
+[source, bash]
+----
+$ lein new account-service
+$ cd account-service
+$ tree
+.
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── doc
+│   └── intro.md
+├── project.clj
+├── resources
+├── src
+│   └── account_service
+│       └── core.clj
+└── test
+    └── account_service
+        └── core_test.clj
+----
+
+== Getting started with Ring
+
+We will start by demonstrating a simple use case using the https://github.com/ring-clojure/ring[ring] library. Take a look inside `src/account-service/core.clj`. You will see:
+[source, clojure]
+----
+(ns account-service.core)
+
+(defn foo
+  "I don't do a whole lot."
+  [x]
+  (println x "Hello, World!"))
+----
+
+Replace `foo` with a simple `handler` function:
+[source, clojure]
+----
+(ns account-service.core)
+
+(defn handler [request]
+  {:body "Hello from ring"})
+----
+
+We will use this `handler` function to handle all incoming requests. As you can see it just returns a simple `map` in which we have an entry with key `:body` and a `string` as the value. Now take a look inside `project.clj`. You will see:
+[source, clojure]
+----
+(defproject account-service "0.1.0-SNAPSHOT"
+  :description "FIXME: write description"
+  :url "http://example.com/FIXME"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :dependencies [[org.clojure/clojure "1.8.0"]])
+----
+
+You can remove the `:description`, `:url` and `:license` entries for now, and add the `ring` dependency, the `lein-ring` plugin and the reference to the ring `handler` which we wrote in the previous step:
+[source, clojure]
+----
+(defproject account-service "0.1.0-SNAPSHOT"
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [ring "1.4.0"]]
+  :ring {:handler account-service.core/handler}
+  :profiles {:dev
+              {:plugins [[lein-ring "0.9.7"]]}})
+----
+
+That's it. We have instructed `Ring` where it can find the function to process all incoming `HTTP` requests. Now let's run our simple web application.
+
+== Run the server
+
+In your shell run:
+[source, bash]
+----
+$ lein ring server-headless
+...
+Started server on port 3000
+----
+
+This starts a server which will handle incoming `HTTP` requests on port 3000. In another shell we can test the server by running:
+[source, bash]
+----
+$ curl http://localhost:3000/
+Hello from ring
+----
+
+As you can see we have the response containing `Hello from ring` which we wrote previously in our `handler`.
+
+== Live reload
+
+With the ring server still running, change the message in the `handler` function in `core.clj`, save the file, and rerun `curl http://localhost:3000/`. You should see the updated message.
+
+== Using compojure-api
+
+https://github.com/metosin/compojure-api[Compojure-api] is a library that makes it very easy to build web APIs. It is built on top of https://github.com/weavejester/compojure[compojure] and https://github.com/ring-clojure/ring[ring]. It also uses the https://github.com/plumatic/schema[schema] library for describing and validating requests, and https://github.com/metosin/ring-swagger[ring-swagger] to expose API documentation. First let's add some requires in `core.clj`:
+
+[source, clojure]
+----
+(ns account-service.core
+  (:require [compojure.api.sweet :refer :all]
+            [ring.util.http-response :refer :all]
+            [schema.core :as s]
+            [ring.swagger.schema :as rs]))
+----
+
+Next we define schemas for the payloads:
+[source, clojure]
+----
+(s/defschema Account
+  {:id      Long
+   :balance s/Num})
+
+(s/defschema NewAccount (dissoc Account :id))
+
+(s/defschema Transfer
+  {:id           Long
+   :from-account s/Int
+   :to-account   s/Int
+   :amount       s/Num
+   :status       s/Keyword})
+
+(s/defschema NewTransfer (dissoc Transfer :id :status))
+----
+
+And finally let's define our routes, one to create an account, and one to request a transfer. Replace the handler function we wrote earlier with:
+[source, clojure]
+----
+(def app
+  (api
+    {:swagger
+     {:ui   "/"
+      :spec "/swagger.json"
+      :data {:info {:title "Account Service"}
+             :tags [{:name "api"}]}}}
+    (context "/api" []
+             :tags ["api"]
+             (POST "/account" []
+                   :body [account (describe NewAccount "new account")]
+                   (ok))
+             (POST "/transfer" []
+                   :body [transfer (describe NewTransfer "new transfer")]
+                   (ok)))))
+----
+
+Finally replace `ring` with the `compojure-api` dependency in `project.clj`:
+[source, clojure]
+----
+(defproject account-service "0.1.0-SNAPSHOT"
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [metosin/compojure-api "1.0.2"]]
+  :ring {:handler account-service.core/app}
+  :profiles {:dev
+             {:plugins      [[lein-ring "0.9.7"]]
+              :dependencies [[javax.servlet/servlet-api "2.5"]]}})
+----
+
+With that in place run `lein ring server` in the shell and go to http://localhost:3000/index.html in your browser. You should see a Swagger UI which allows you to try out the endpoints:
+
+image::/images/2016-04-28-swagger.png[]
+
+You should get `200` for valid requests and `400` for requests that don't conform to the schema we defined.
+
+== Packaging
+
+For packaging your app, you can either create an `uberjar` and then simply run it like this:
+[source, bash]
+----
+$ lein ring uberjar
+$ java -jar target/account-service-0.1.0-SNAPSHOT-standalone.jar
+----
+
+or create a `war` and deploy it in your favorite container:
+[source, bash]
+----
+$ lein ring uberwar
+----
+
+== Conclusion
+
+In this post we have exposed a simple API using `compojure-api`. You can find all the source code on http://github.com/anthonygalea/account-service[github]. In the next post we will show how to use datomic for persistence.
