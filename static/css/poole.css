@@ -30,11 +30,6 @@ html {
   font-size: 16px;
   line-height: 1.5;
 }
-@media (min-width: 38em) {
-  html {
-    font-size: 20px;
-  }
-}
 
 body {
   color: #515151;
@@ -43,9 +38,54 @@ body {
       -ms-text-size-adjust: 100%;
 }
 
+time {
+  float: right;
+}
+
+.navbar {
+  margin-right: 0;
+  margin-left: 0;
+  border-bottom: 1px solid #eee;
+  background-color: #fdfdfd;
+  height: 3rem;
+  width: 100%;
+  position: fixed;
+  z-index: 1;
+}
+
+.navbar a {
+  color: #2b2b2b;
+  text-decoration: none !important;
+}
+
+.title {
+  position: fixed;
+}
+
+.links {
+  float: right;
+}
+
+.links ul {
+  padding-top: 0.5rem;
+  list-style-type: none;
+}
+
+.links a {
+  color: #2b2b2b;
+}
+
+.navbar h1 {
+  color: #fff;
+  margin-top: 0;
+  /*font-family: "Abril Fatface", serif;*/
+  font-size: 1.5rem;
+  padding-top: 0.5rem;
+}
+
 /* No `:visited` state is required by default (browsers will use `a`) */
 a {
-  color: #268bd2;
+  /*color: #268bd2;*/
   text-decoration: none;
 }
 /* `:focus` is linked to `:hover` for basic accessibility */
@@ -209,7 +249,7 @@ tbody tr:nth-child(odd) th {
  * Center the page content.
  */
 .container {
-  max-width: 38rem;
+  max-width: 58rem;
   padding-left:  1rem;
   padding-right: 1rem;
   margin-left:  auto;
@@ -335,89 +375,15 @@ html {
   }
 }
 
-
-/*
- * Sidebar
- *
- * Flexible banner for housing site name, intro, and "footer" content. Starts
- * out above content in mobile and later moves to the side with wider viewports.
- */
-
-.sidebar {
-  text-align: center;
-  padding: 1rem 1rem;
-  color: rgba(255,255,255,.5);
-  background-color: #202020;
-}
-
-@media (min-width: 48em) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 18rem;
-    text-align: left;
-  }
-
-  .sidebar-sticky {
-    position: absolute;
-    right:  1rem;
-    bottom: 1rem;
-    left:   1rem;
-  }
-}
-
-.sidebar a {
-  color: #fff;
-  text-decoration: none;
-}
-
-.sidebar-about h1 {
-  color: #fff;
-  margin-top: 0;
-  font-family: "Abril Fatface", serif;
-  font-size: 2.5rem;
-}
-
-.sidebar-nav {
-  margin-bottom: 1rem;
-}
-.sidebar-nav-item {
-  display: block;
-  line-height: 1.75;
-}
-a.sidebar-nav-item:hover,
-a.sidebar-nav-item:focus {
-  text-decoration: underline;
-}
-.sidebar-nav-item.active {
-  font-weight: bold;
-}
-
 .content {
-  padding-top:    2rem;
+  padding-top: 4rem;
   padding-bottom: 2rem;
+  margin: 0 auto;
 }
-
-@media (min-width: 48em) {
-  .content {
-    max-width: 38rem;
-    margin-left: 22rem;
-    margin-right: 2rem;
-  }
-}
-
-@media (min-width: 64em) {
-  .content {
-    margin-left: 22rem;
-  }
-}
-
 
 .posts {
   list-style: none;
-  margin-left: -1rem;
+  margin-left: -2rem;
 }
 
 .post p {
@@ -436,23 +402,10 @@ pre {
   padding-bottom: 0;
 }
 
-.sidebar-nav {
-  padding-left: 0;
-  list-style: none;
-  margin-bottom: 0.5rem;
-  padding-top: 0.3rem;
-}
-
-.sidebar-nav .label {
-  color: #fff;
-  background-color: #337ab7;
-}
-
 .post .label {
   color: #fff;
   background-color: #337ab7;
 }
-
 
 /* From bootstrap.css 3.3.2 - start */
 .label {
@@ -626,54 +579,4 @@ a.label:focus {
 
 .tableblock .MathJax_Display {
   margin: 0 0;
-}
-
-.toc {
-  display: none;
-  position: fixed;
-  /*top: 11.5rem;*/
-  top: 2rem;
-  left: 63rem;
-  /*left: 80rem;*/
-  overflow: hidden;
-  white-space:nowrap;
-}
-
-#toctitle {
-  display: none;
-}
-
-.toc ul {
-  list-style-type: none;
-  margin-bottom: 0;
-}
-
-.toc a {
-  color: #fff;
-  padding-left: 1rem;
-}
-
-.toc a:hover {
-  text-decoration: none;
-}
-
-.toc a.active {
-  border-left: 3px solid #fff;
-}
-
-.toc-bg {
-  /*display: none;*/
-  z-index: -1;
-  position: fixed;
-  left: 64rem;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #202020;
-}
-
-@media (min-width: 94em) {
-  .toc {
-    display: block;
-  }
 }

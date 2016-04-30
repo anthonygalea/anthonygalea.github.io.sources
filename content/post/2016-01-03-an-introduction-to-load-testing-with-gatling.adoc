@@ -5,7 +5,6 @@ categories = ["testing","http","scala"]
 +++
 
 :source-highlighter: pygments
-:toc: right
 
 == Introduction
 

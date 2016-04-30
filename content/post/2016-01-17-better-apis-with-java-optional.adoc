@@ -5,7 +5,6 @@ categories = ["java"]
 +++
 
 :source-highlighter: pygments
-:toc: right
 
 == Introduction
 
