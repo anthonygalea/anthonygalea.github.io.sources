@@ -42,11 +42,34 @@ time {
   float: right;
 }
 
+h1, h2, h3, ul, .posts, .quoteblock, .post-date, .paragraph, .ulist, .pygments {
+  max-width: 58rem;
+  margin: auto;
+}
+
+.post-header, .post-previous-next {
+  background-color: #f9f9f9;
+  padding-top: 1rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.post-previous-next {
+  background-color: #f9f9f9;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0rem;
+}
+
+.post-see-also {
+  padding-bottom: 1rem;
+}
+
 .navbar {
   margin-right: 0;
   margin-left: 0;
-  border-bottom: 1px solid #eee;
-  background-color: #fdfdfd;
+  background-color: #337ab7;
   height: 3rem;
   width: 100%;
   position: fixed;
@@ -54,7 +77,7 @@ time {
 }
 
 .navbar a {
-  color: #2b2b2b;
+  color: white;
   text-decoration: none !important;
 }
 
@@ -69,10 +92,6 @@ time {
 .links ul {
   padding-top: 0.5rem;
   list-style-type: none;
-}
-
-.links a {
-  color: #2b2b2b;
 }
 
 .navbar h1 {
@@ -103,6 +122,7 @@ h1, h2, h3, h4, h5, h6 {
   text-rendering: optimizeLegibility;
 }
 h1 {
+  margin-top: 1rem;
   font-size: 2rem;
 }
 h2 {
@@ -131,7 +151,6 @@ strong {
 /* Lists */
 ul, ol, dl {
   margin-top: 0;
-  margin-bottom: 0.5rem;
 }
 
 dt {
@@ -198,7 +217,9 @@ pre code {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   border-radius: 4px;
+  max-width: 58rem;
 }
+
 .highlight pre {
   margin-bottom: 0;
 }
@@ -250,8 +271,6 @@ tbody tr:nth-child(odd) th {
  */
 .container {
   max-width: 58rem;
-  padding-left:  1rem;
-  padding-right: 1rem;
   margin-left:  auto;
   margin-right: auto;
 }
@@ -264,7 +283,6 @@ tbody tr:nth-child(odd) th {
  */
 .page,
 .post {
-  margin-bottom: 1em;
 }
 
 /* Blog post or page title */
@@ -281,8 +299,6 @@ tbody tr:nth-child(odd) th {
 /* Meta data line below post title */
 .post-date {
   display: block;
-  margin-top: -.5rem;
-  margin-bottom: 1rem;
   color: #9a9a9a;
 }
 
@@ -376,14 +392,15 @@ html {
 }
 
 .content {
-  padding-top: 4rem;
-  padding-bottom: 2rem;
+  padding-top: 3rem;
   margin: 0 auto;
 }
 
 .posts {
+  padding-top: 0.5rem;
   list-style: none;
   margin-left: -2rem;
+  max-width: 60rem;
 }
 
 .post p {
@@ -395,11 +412,15 @@ pre {
   padding: 5px;
 }
 
+
 .listingblock > .content, .imageblock > .content {
-  margin-left: 0;
-  margin-right: 0;
+  margin: auto;
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.listingblock > .content {
+  background-color: #272822;
 }
 
 .post .label {
