@@ -1,16 +1,20 @@
 {{ partial "head.html" . }}
-<div class="content container">
-  <h1>Posts with category [{{ .Title }}]</h1>
-  <br>  
-  <ul class="posts">
-  {{ range .Data.Pages }}
-    <li><a href="{{ .Permalink }}">{{ .Title }}</a>
-    {{ if isset .Params "categories" }}
-    {{ range .Params.categories }}<a class="label" href="{{ "/categories/" | absURL }}{{ . | urlize }}">{{ . }}</a>{{ end }}
-    {{ end }}</span>
-    <time>{{ .Date.Format "Jan 2, 2006" }}</time></li>
-    <hr>
-  {{ end }}
-  </ul>
+<div class="content">
+  <div class="post-header">
+    <h1 class="post-title">Posts tagged <span class="label">{{ lower .Title }}</span></h1>
+  </div>
+
+  <div class="paragraph">
+    <ul class="posts">
+    {{ range .Data.Pages }}
+      <li><a href="{{ .Permalink }}">{{ .Title }}</a>
+      {{ if isset .Params "categories" }}
+      {{ range .Params.categories }}<a class="label" href="{{ "/categories/" | absURL }}{{ . | urlize }}">{{ . }}</a>{{ end }}
+      {{ end }}</span>
+      <time>{{ .Date.Format "Jan 2, 2006" }}</time></li>
+      <hr>
+    {{ end }}
+    </ul>
+  </div>
 </div>
 {{ partial "foot.html" . }}

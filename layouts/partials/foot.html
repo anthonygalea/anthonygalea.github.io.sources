@@ -1,3 +1,22 @@
+<footer>
+  <div class="paragraph">
+    <ul>
+      <li>
+      {{ with .Site.Params.github }}<a href="{{ . }}" target="_blank">GitHub</i></a> |{{ end }}
+      {{ with .Site.Params.bitbucket }}<a href="{{ . }}" target="_blank">Bitbucket</a> |{{ end }}
+      {{ with .Site.Params.stackOverflow }}<a href="{{ . }}" target="_blank">StackOverflow</a> |{{ end }}
+      {{ with .Site.Params.linkedin }}<a href="{{ . }}" target="_blank">LinkedIn</a> |{{ end }}
+      {{ with .Site.Params.googleplus }}<a href="{{ . }}" target="_blank">i>Google+</a> |{{ end }}
+      {{ with .Site.Params.facebook }}<a href="{{ . }}" target="_blank">Facebook</a> |{{ end }}
+      {{ with .Site.Params.twitter }}<a href="{{ . }}" target="_blank">Twitter</a> |{{ end }}
+      {{ with .Site.Params.youtube }}<a href="{{ . }}" target="_blank">Youtube</a> |{{ end }}
+      {{ with .Site.Params.email }}<a href="{{ . }}" target="_blank">Contact</a> |{{ end }}
+      {{ if .Site.Params.rss }}<a href="{{ "/index.xml" | absURL }}" type="application/rss+xml" target="_blank">RSS Feed</a>{{ end }}
+      </li>
+    </ul>
+  </div>
+</footer>
+
 {{ if isset .Site.Params "highlight" }}<script src="{{ "/js/highlight.pack.js" | absURL }}"></script>
 <script>hljs.initHighlightingOnLoad();</script>{{ end }}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-MML-AM_HTMLorMML" type="text/javascript"></script>

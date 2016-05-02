@@ -14,7 +14,7 @@
     </div>
     {{ .Content }}
 
-    <div class="post-previous-next">
+    <div class="post-footer">
       <div class="paragraph">
         {{ if .PrevInSection }}
         <a href="{{.PrevInSection.Permalink}}">← Previous Post</a>
@@ -27,7 +27,6 @@
         <a class="pull-right" href="/">Blog →</a>
         {{ end }}
       </div>
-    </div>
 
     {{ $.Scratch.Add "display_see_also" false }}
     {{ $page_link := .Permalink }}
@@ -40,7 +39,7 @@
       {{ end }}
     {{ end }}
 
-    {{ if $.Scratch.Get "display_see_also" }}<div class="paragraph post-see-also"><h1>See also</h1>
+    {{ if $.Scratch.Get "display_see_also" }}<div class="paragraph"><h1>See also</h1>
       <ul>
         {{ range .Site.Pages }}
           {{ $page := . }}
@@ -51,12 +50,11 @@
         {{ end }}
       </ul>
     </div>
+    </div>
   {{ end }}
   {{ if .Site.DisqusShortname }}<div id="disqus_thread"></div>{{ end }}
 
 </div>
-
-<!-- <div class="toc-bg"></div> -->
 
 {{ with .Site.DisqusShortname }}
 <script type="text/javascript">
@@ -82,4 +80,5 @@ var disqus_shortname = {{ . }};
 <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
 {{ end }}
+</div>
 {{ partial "foot.html" . }}
