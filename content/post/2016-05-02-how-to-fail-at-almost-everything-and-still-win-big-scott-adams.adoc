@@ -1,0 +1,75 @@
++++
+title = "How to Fail at Almost Everything and Still Win Big - Scott Adams"
+date = "2016-05-02"
+categories = ["book-notes"]
++++
+
+In https://www.goodreads.com/book/show/17859574-how-to-fail-at-almost-everything-and-still-win-big[How to Fail at Almost Everything and Still Win Big], Scott Adams, creator of the http://dilbert.com[Dilbert comic strip], doles out some great nuggets of wisdom such as:
+
+[quote]
+____
+money distorts truth like a hippo in a thong
+____
+
+Really enjoyed reading this one. Some highlights below.
+
+== On Simplicity
+
+[quote]
+____
+My wife, Shelly, is a world-class optimizer. I, on the other hand, cling to simplicity like a monkey on a coconut.
+____
+
+[quote]
+____
+Simplicity transforms ordinary into amazing.
+____
+
+== On being an Expert
+
+[quote]
+____
+I’m also not an expert at anything, including my own job. I draw like an inebriated howler monkey and my writing style falls somewhere between baffling and sophomoric. It’s an ongoing mystery to me why I keep getting paid.
+____
+
+== On Humility
+
+[quote]
+____
+When it comes to any big or complicated question, humility is the only sensible point of view.
+____
+
+== On Failure
+
+[quote]
+____
+The short answer is that over the years I have cultivated a unique relationship with failure. I invite it. I survive it. I appreciate it. And then I mug the shit out of it.
+____
+
+== On Good Ideas vs Execution
+
+[quote]
+____
+Good ideas have no value because the world already has too many of them. The market rewards execution, not ideas.
+____
+
+== On Goals
+
+[quote]
+____
+To put it bluntly, goals are for losers. ... you will spend every moment until you reach the goal—if you reach it at all—feeling as if you were short of your goal. In other words, goal-oriented people exist in a state of nearly continuous failure that they hope will be temporary. That feeling wears on you. In time, it becomes heavy and uncomfortable. It might even drive you out of the game.
+____
+
+== On Knowledge
+
+[quote]
+____
+Reality is overrated and impossible to understand with any degree of certainty. What you do know for sure is that some ways of looking at the world work better than others. Pick the way that works, even if you don’t know why.
+____
+
+== On Success
+
+[quote]
+____
+One of the best pieces of advice I’ve ever heard goes something like this: If you want success, figure out the price, then pay it.
+____

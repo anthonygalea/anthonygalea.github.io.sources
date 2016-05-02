@@ -4,7 +4,7 @@
     <div class="post-header">
       <h1 class="post-title">{{ .Title }}</h1>
       <span class="post-date">
-      {{ .Date.Format "Jan 2, 2006" }} &middot; {{ .ReadingTime }} minute read &middot;
+      {{ .Date.Format "Jan 2, 2006" }} &middot; {{ .ReadingTime }} minute read
       {{ if isset .Params "categories" }}
       {{ range .Params.categories }}<a class="label" href="{{ "/categories/" | absURL }}{{ . | urlize }}">{{ . }}</a>{{ end }}
       {{ end }}
@@ -39,8 +39,9 @@
       {{ end }}
     {{ end }}
 
-    {{ if $.Scratch.Get "display_see_also" }}<div class="paragraph"><h1>See also</h1>
-      <ul>
+    {{ if $.Scratch.Get "display_see_also" }}<h1>See also</h1>
+      <div class="paragraph">
+        <ul>
         {{ range .Site.Pages }}
           {{ $page := . }}
           {{ $has_common_categories := intersect $categories .Params.categories | len | lt 0 }}

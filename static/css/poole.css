@@ -26,9 +26,9 @@ body {
 }
 
 html {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Lato, Helvetica, Arial, sans-serif;
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.25;
 }
 
 body {
@@ -42,16 +42,23 @@ time {
   float: right;
 }
 
-h1, h2, h3, ul, .posts, .quoteblock, .post-date, .paragraph, .ulist, .pygments {
+h1, h2, h3, .quoteblock, .post-date, .paragraph, .ulist, .pygments {
   max-width: 58rem;
   margin: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.paragraph {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 .post-header, .post-footer {
   background-color: #f9f9f9;
-  padding-top: 1rem;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
+  padding-top: 2rem;
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .post-footer {
@@ -62,15 +69,13 @@ h1, h2, h3, ul, .posts, .quoteblock, .post-date, .paragraph, .ulist, .pygments {
   margin-bottom: 0rem;
 }
 
-.post-see-also {
-  padding-bottom: 1rem;
-  background-color: #f9f9f9;
+.post-footer ul {
+  line-height: 1.5rem;
 }
 
 footer {
   color: white;
   background-color: #272822;
-  height: 3rem;
 }
 
 footer a {
@@ -79,8 +84,9 @@ footer a {
 
 footer ul {
   margin-left: -2rem;
-  padding-top: 0.75rem;
+  margin-bottom: 0rem;
   list-style-type: none;
+  padding-right: 1rem;
 }
 
 .navbar {
@@ -107,21 +113,22 @@ footer ul {
 }
 
 .links ul {
-  padding-top: 0.5rem;
+  padding-right: 1rem;
   list-style-type: none;
+  font-size: 1.5rem;
+  line-height: 3rem;
 }
 
 .navbar h1 {
   color: #fff;
   margin-top: 0;
-  /*font-family: "Abril Fatface", serif;*/
-  font-size: 1.5rem;
-  padding-top: 0.5rem;
+  font-size: 1.1rem;
+  line-height: 3rem;
 }
 
 /* No `:visited` state is required by default (browsers will use `a`) */
 a {
-  /*color: #268bd2;*/
+  color: #268bd2;
   text-decoration: none;
 }
 /* `:focus` is linked to `:hover` for basic accessibility */
@@ -132,18 +139,17 @@ a:focus {
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
-  margin-bottom: .5rem;
   font-weight: bold;
   line-height: 1.25;
   color: #2b2b2b;
   text-rendering: optimizeLegibility;
 }
 h1 {
-  margin-top: 1rem;
+  margin-top: 2rem;
   font-size: 2rem;
 }
 h2 {
-  margin-top: 1rem;
+  margin-top: 2rem;
   font-size: 1.5rem;
 }
 h3 {
@@ -151,7 +157,7 @@ h3 {
   font-size: 1.25rem;
 }
 h4, h5, h6 {
-  margin-top: 1rem;
+  margin-top: 2rem;
   font-size: 1rem;
 }
 
@@ -243,7 +249,6 @@ pre code {
 
 /* Quotes */
 blockquote {
-  padding: .5rem 0rem;
   margin: .8rem 0;
   color: #7a7a7a;
   border-left: .25rem solid #e5e5e5;
@@ -256,6 +261,11 @@ blockquote p:last-child {
     padding-right: 0rem;
     padding-left: 1.25rem;
   }
+}
+
+blockquote .paragraph {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 img {
@@ -310,7 +320,7 @@ tbody tr:nth-child(odd) th {
 }
 .page-title,
 .post-title {
-  margin-top: 0;
+  margin-top: -0.6rem;
 }
 
 /* Meta data line below post title */
@@ -329,7 +339,6 @@ tbody tr:nth-child(odd) th {
   overflow: hidden; /* clearfix */
   margin-left: -1rem;
   margin-right: -1rem;
-  font-family: "PT Sans", Helvetica, Arial, sans-serif;
   color: #ccc;
   text-align: center;
 }
@@ -394,9 +403,6 @@ a.pagination-item:hover {
  *
  * Update the foundational and global aspects of the page.
  */
-html {
-  font-family: "PT Sans", Helvetica, Arial, sans-serif;
-}
 @media (min-width: 48em) {
   html {
     font-size: 16px;
@@ -414,10 +420,12 @@ html {
 }
 
 .posts {
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   list-style: none;
   margin-left: -2rem;
   max-width: 60rem;
+  font-size: 0.9rem;
+  line-height: 1.5rem;
 }
 
 .post p {
@@ -429,7 +437,6 @@ pre {
   padding: 5px;
 }
 
-
 .listingblock > .content, .imageblock > .content {
   margin: auto;
   padding-top: 0;
@@ -437,6 +444,8 @@ pre {
 }
 
 .listingblock > .content {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   background-color: #272822;
 }
 
