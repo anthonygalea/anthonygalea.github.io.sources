@@ -15,7 +15,7 @@ In this post I will give a walkthrough of building a simple account service in c
 
 == Install Leiningen
 
-http://leiningen.org/[Leiningen] provides build automation and dependency management when working with Clojure projects. If you don't already have it installed you will need to install it. If you're onn Mac OS and using `brew` you can just open the shell and run `brew install leiningen`. If you're on another platform follow the instructions at http://leiningen.org[leiningen.org]. After installing `leiningen` you should be able to open a shell and run `lein --version`:
+http://leiningen.org/[Leiningen] provides build automation and dependency management for Clojure projects. If you're on Mac OS and using `brew` you can install it by opening a shell and running `brew install leiningen`. If you're on another platform follow the instructions at http://leiningen.org[leiningen.org]. After installing leiningen you should be able to  run `lein --version`:
 [source, bash]
 ----
 $ lein --version
@@ -48,7 +48,7 @@ $ tree
 
 == Getting started with Ring
 
-We will start by demonstrating a simple use case using the https://github.com/ring-clojure/ring[ring] library. Take a look inside `src/account-service/core.clj`. You will see:
+Let's start by demonstrating a simple use case using the https://github.com/ring-clojure/ring[ring] library. Take a look inside `src/account-service/core.clj`:
 [source, clojure]
 ----
 (ns account-service.core)
@@ -68,7 +68,7 @@ Replace `foo` with a simple `handler` function:
   {:body "Hello from ring"})
 ----
 
-We will use this `handler` function to handle all incoming requests. As you can see it just returns a simple `map` in which we have an entry with key `:body` and a `string` as the value. Now take a look inside `project.clj`. You will see:
+We will use this `handler` function to handle all incoming requests. As you can see it just returns a simple `map` in which we have an entry with key `:body` and a `string` as the value. Now take a look inside `project.clj`:
 [source, clojure]
 ----
 (defproject account-service "0.1.0-SNAPSHOT"
@@ -90,11 +90,7 @@ You can remove the `:description`, `:url` and `:license` entries for now, and ad
               {:plugins [[lein-ring "0.9.7"]]}})
 ----
 
-That's it. We have instructed `Ring` where it can find the function to process all incoming `HTTP` requests. Now let's run our simple web application.
-
-== Run the server
-
-In your shell run:
+That's it. We have instructed `Ring` where it can find the function to process all incoming `HTTP` requests. Now let's run our simple web application. Open a shell and run:
 [source, bash]
 ----
 $ lein ring server-headless
@@ -202,4 +198,4 @@ $ lein ring uberwar
 
 == Conclusion
 
-In this post we have exposed a simple API using `compojure-api`. You can find all the source code on http://github.com/anthonygalea/account-service[github]. In the next post we will show how to use datomic for persistence.
+In this post we have exposed a simple API using https://github.com/metosin/compojure-api[compojure-api]. You can find all the source code on http://github.com/anthonygalea/account-service[github]. In the next post we will show how to use this in conjunction with http://www.datomic.com[datomic] for persistence.

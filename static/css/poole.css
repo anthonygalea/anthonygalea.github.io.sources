@@ -42,7 +42,7 @@ time {
   float: right;
 }
 
-h1, h2, h3, .quoteblock, .post-date, .paragraph, .ulist, .pygments {
+h1, h2, h3, .quoteblock, .post-date, .paragraph, .ulist, .olist, .pygments {
   max-width: 58rem;
   margin: auto;
   padding-left: 1rem;
@@ -58,7 +58,6 @@ h1, h2, h3, .quoteblock, .post-date, .paragraph, .ulist, .pygments {
   background-color: #f9f9f9;
   padding-top: 2rem;
   padding-bottom: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .post-footer {
@@ -128,7 +127,7 @@ footer ul {
 
 /* No `:visited` state is required by default (browsers will use `a`) */
 a {
-  color: #268bd2;
+  color: #337ab7;
   text-decoration: none;
 }
 /* `:focus` is linked to `:hover` for basic accessibility */
@@ -426,6 +425,7 @@ a.pagination-item:hover {
   max-width: 60rem;
   font-size: 0.9rem;
   line-height: 1.5rem;
+  padding-top: 2rem;
 }
 
 .post p {
