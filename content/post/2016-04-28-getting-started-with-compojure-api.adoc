@@ -1,5 +1,5 @@
 +++
-title = "An account service in Clojure - Part 1"
+title = "Getting started with compojure-api"
 date = "2016-04-28"
 categories = ["clojure"]
 +++
@@ -8,14 +8,16 @@ categories = ["clojure"]
 
 == Introduction
 
-In this post I will give a walkthrough of building a simple account service in clojure. Specifically the service will provide the possibility of:
+In this post I will give a walkthrough of building a simple service using https://github.com/metosin/compojure-api[compojure-api]. As a use case we will build a simple account service that offers two functions:
 
 * creating an account with some initial balance
-* and transferring some amount from one account to another.
+* transferring some amount from one account to another.
 
-== Install Leiningen
+By the end of this tutorial you should have a swagger UI that allows to test these two calls:
 
-http://leiningen.org/[Leiningen] provides build automation and dependency management for Clojure projects. If you're on Mac OS and using `brew` you can install it by opening a shell and running `brew install leiningen`. If you're on another platform follow the instructions at http://leiningen.org[leiningen.org]. After installing leiningen you should be able to  run `lein --version`:
+image::/images/2016-04-28-swagger.png[]
+
+The only prerequisite is that you install http://leiningen.org/[Leiningen]. Leiningen provides build automation and dependency management for Clojure projects. If you're on Mac OS and using `brew` you can install it by opening a shell and running `brew install leiningen`. If you're on another platform follow the instructions at http://leiningen.org[leiningen.org]. After installing leiningen you should be able to  run `lein --version`:
 [source, bash]
 ----
 $ lein --version
@@ -48,7 +50,7 @@ $ tree
 
 == Getting started with Ring
 
-Let's start by demonstrating a simple use case using the https://github.com/ring-clojure/ring[ring] library. Take a look inside `src/account-service/core.clj`:
+Before diving into compojure-api let's demonstrate a simple use case using the https://github.com/ring-clojure/ring[ring] library. Take a look inside `src/account-service/core.clj`:
 [source, clojure]
 ----
 (ns account-service.core)
@@ -113,7 +115,7 @@ With the ring server still running, change the message in the `handler` function
 
 == Using compojure-api
 
-https://github.com/metosin/compojure-api[Compojure-api] is a library that makes it very easy to build web APIs. It is built on top of https://github.com/weavejester/compojure[compojure] and https://github.com/ring-clojure/ring[ring]. It also uses the https://github.com/plumatic/schema[schema] library for describing and validating requests, and https://github.com/metosin/ring-swagger[ring-swagger] to expose API documentation. First let's add some requires in `core.clj`:
+The https://github.com/metosin/compojure-api[compojure-api] library makes it very easy to build web APIs. It is built on top of https://github.com/weavejester/compojure[compojure] and https://github.com/ring-clojure/ring[ring]. It also uses the https://github.com/plumatic/schema[schema] library for describing and validating requests, and https://github.com/metosin/ring-swagger[ring-swagger] to expose API documentation. First let's add some requires in `core.clj`:
 
 [source, clojure]
 ----
@@ -177,7 +179,7 @@ Finally replace `ring` with the `compojure-api` dependency in `project.clj`:
 
 With that in place run `lein ring server` in the shell and go to http://localhost:3000/index.html in your browser. You should see a Swagger UI which allows you to try out the endpoints:
 
-image::/images/2016-04-28-swagger.png[]
+image::/images/2016-04-28-swagger-2.png[]
 
 You should get `200` for valid requests and `400` for requests that don't conform to the schema we defined.
 
