@@ -2,6 +2,7 @@
 title = "An Introduction to Load Testing with Gatling"
 date = "2016-01-03"
 categories = ["testing","http","scala"]
+keywords = ["gatling", "load", "testing", "tutorial", "introduction"]
 +++
 
 :source-highlighter: pygments

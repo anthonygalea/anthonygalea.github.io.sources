@@ -2,6 +2,7 @@
 title = "Solutions to 4clojure Elementary Problems"
 date = "2016-03-16"
 categories = ["clojure"]
+keywords = ["4clojure", "elementary", "solutions", "problems", "clojure"]
 +++
 
 :source-highlighter: pygments

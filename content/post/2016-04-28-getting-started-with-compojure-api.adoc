@@ -2,6 +2,7 @@
 title = "Getting started with compojure-api"
 date = "2016-04-28"
 categories = ["clojure"]
+keywords = ["compojure-api", "tutorial", "introduction", "compojure", "clojure"]
 +++
 
 :source-highlighter: pygments

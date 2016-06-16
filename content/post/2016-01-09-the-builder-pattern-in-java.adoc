@@ -2,6 +2,7 @@
 title = "The Builder Pattern in Java"
 date = "2016-01-09"
 categories = ["design-patterns","java"]
+keywords = ["builder", "pattern", "java", "introduction", "tutorial"]
 +++
 
 :source-highlighter: pygments

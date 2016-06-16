@@ -2,6 +2,7 @@
 title = "Better APIs with Java Optional"
 date = "2016-01-17"
 categories = ["java"]
+keywords = ["java", "optional"]
 +++
 
 :source-highlighter: pygments
