@@ -23,9 +23,9 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
 
 (fn reverse-interleave [s n]
   ((fn reverse-interleave [s n i]
-    (if (= i 1)
-    (list (take-nth n s))
-    (cons (take-nth n s) (reverse-interleave (rest s) n (dec i)))))
+     (if (= i 1)
+       (list (take-nth n s))
+       (cons (take-nth n s) (reverse-interleave (rest s) n (dec i)))))
    s n n))
 ----
 

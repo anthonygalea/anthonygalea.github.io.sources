@@ -1,0 +1,363 @@
++++
+title = "Using Datomic in a simple use case"
+date = "2016-06-16"
+categories = ["clojure"]
+keywords = ["datomic", "introduction", "tutorial", "example"]
++++
+
+:source-highlighter: pygments
+
+== Introduction
+
+In a http://www.anthony-galea.com/blog/post/getting-started-with-compojure-api[previous post] we started building an account service in Clojure using https://github.com/metosin/compojure-api[compojure-api]. In this post we will add persistence using http://www.datomic.com/[datomic]. The sources are available on http://github.com/anthonygalea/account-service[github]. For an introduction to Datomic as well as the value-proposition behind it you should take a look at the http://www.datomic.com/training.html[training resources on the Datomic website]. If the videos are too much of an investment at this stage, you might want to take a look at Daniel Higginbotham's article http://www.flyingmachinestudios.com/programming/datomic-for-five-year-olds/[Datomic for Five Year Olds]. Just as a quick reminder, the service should support creating accounts and transferring money from one account to another. Here are the Swagger docs for the API:
+
+image::/images/2016-06-16-swagger.png[]
+
+== The Schema
+
+We will start by defining the schema for datomic. Under the `resources` folder create a file named `schema.dtm`. This will hold the datomic schema definition. An account only has one field: `balance`:
+[source, clojure]
+----
+{:db/id                 #db/id[:db.part/db]
+ :db/ident              :account/balance
+ :db/valueType          :db.type/bigdec
+ :db/cardinality        :db.cardinality/one
+ :db/doc                "An account's balance"
+ :db.install/_attribute :db.part/db}
+----
+
+For transfers we need: `from-account`, `to-account`, `amount`:
+[source, clojure]
+----
+{:db/id                 #db/id[:db.part/db]
+ :db/ident              :transfer/amount
+ :db/valueType          :db.type/bigdec
+ :db/cardinality        :db.cardinality/one
+ :db/doc                "A transaction's amount"
+ :db.install/_attribute :db.part/db}
+
+{:db/id                 #db/id[:db.part/db]
+ :db/ident              :transfer/from-account
+ :db/valueType          :db.type/ref
+ :db/cardinality        :db.cardinality/one
+ :db/doc                "An account from which to transfer money"
+ :db.install/_attribute :db.part/db}
+
+{:db/id                 #db/id[:db.part/db]
+ :db/ident              :transfer/to-account
+ :db/valueType          :db.type/ref
+ :db/cardinality        :db.cardinality/one
+ :db/doc                "An account to which to transfer money"
+ :db.install/_attribute :db.part/db}
+----
+
+We will also use an additional field called `status` to keep track of what happened to a transfer request:
+[source, clojure]
+----
+{:db/id                 #db/id[:db.part/db]
+ :db/ident              :transfer/status
+ :db/valueType          :db.type/ref
+ :db/cardinality        :db.cardinality/one
+ :db/doc                "The status of a transfer"
+ :db.install/_attribute :db.part/db}
+
+[:db/add #db/id[:db.part/user] :db/ident :transfer.status/pending]
+[:db/add #db/id[:db.part/user] :db/ident :transfer.status/success]
+[:db/add #db/id[:db.part/user] :db/ident :transfer.status/insufficient-funds]
+[:db/add #db/id[:db.part/user] :db/ident :transfer.status/no-such-from-account]
+[:db/add #db/id[:db.part/user] :db/ident :transfer.status/no-such-to-account]
+----
+
+The intention is for requests to start in status `pending` and transition them accordingly based on the outcome of the transaction:
+
+image::/images/2016-06-16-status.png[]
+//image::http://yuml.me/56a4bf80[]
+// [pending]->[insufficient-funds{bg:red}]
+// [pending]->[no-such-to-account{bg:red}]
+// [pending]->[no-such-from-account{bg:red}]
+// [pending{bg:wheat}]->[success{bg:seagreen}]
+
+Next create a file under `src/account_service` called `db.clj`. In it we `:require datomic.api` and define the connection to datomic:
+[source, clojure]
+----
+(ns account-service.db
+  (:require [datomic.api :as d]))
+
+(def uri "datomic:free://localhost:4334/account-service-db")
+(def conn (d/connect uri))
+----
+
+== Testing with Midje
+
+Before we implement any of the functionality to deal with datomic let's write some tests. Create a file named `db_test.clj` under `test/account_service`:
+
+[source, clojure]
+----
+(ns account-service.db-test
+  (:require [account-service.db :refer :all]
+            [midje.sweet :refer :all]
+            [datomic.api :as d]))
+----
+
+Notice we use the https://github.com/marick/Midje[midje] and datomic libraries for our tests so add these dependencies in `project.clj`, as well as the `lein-datomic` and `lein-midje` plugins:
+[source, clojure]
+----
+(defproject account-service "0.1.0-SNAPSHOT"
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [com.datomic/datomic-free "0.9.5372"]
+                 [clj-time "0.12.0"]
+                 [expectations "2.1.8"]
+                 [metosin/compojure-api "1.1.2"]]
+  :plugins [[lein-datomic "0.2.0"]]
+  :ring {:handler account-service.core/app}
+  :datomic {:schemas ["resources" ["schema.dtm"]]}
+  :profiles {:dev
+             {:plugins      [[lein-ring "0.9.7"]
+                             [lein-midje "3.2"]]
+              :dependencies [[javax.servlet/servlet-api "2.5"]
+                             [cheshire "5.6.1"]
+                             [ring/ring-mock "0.3.0"]
+                             [midje "1.8.3"]]
+              :datomic      {:config "resources/free-transactor.properties"
+                             :db-uri "datomic:free://localhost:4334/account-service-db"}}})
+
+----
+
+Having defined our dependencies, let's create a function that will allow the tests to work with an `in-memory database` in `core_test.clj`:
+
+[source, clojure]
+----
+(defn create-empty-in-memory-db []
+  (let [uri "datomic:mem://account-service-test-db"]
+    (d/delete-database uri)
+    (d/create-database uri)
+    (let [conn (d/connect uri)
+          schema (read-string (slurp "resources/schema.dtm"))]
+      (d/transact conn schema)
+      conn)))
+----
+
+Every time we call this function we are dropping the database, recreating it and applying the schema. Next let's write our first test for creating accounts:
+
+[source, clojure]
+----
+(fact "Adding one account should allow us to find that account using the returned id"
+  (with-redefs [conn (create-empty-in-memory-db)]
+    (let [account (add-account {:balance 161.80M})]
+      (get-account (:id account)) => {:id (:id account) :balance 161.80M})))
+----
+
+This says we should be able to add an account to the system by providing an initial balance using the function `add-account`. Also we should be able to find said account using the function `get-account`, via the id returned by `add-account`. `with-redefs` temporarily redefines `conn` in `db.clj` so that the tests use the in-memory database. Before implementing these two methods let's define one more test:
+
+[source, clojure]
+----
+(fact "Adding multiple accounts should allow us to find all those accounts"
+  (with-redefs [conn (create-empty-in-memory-db)]
+    (let [account-1 (add-account {:balance 12.34M})
+          account-2 (add-account {:balance 56.78M})
+          account-3 (add-account {:balance 12.34M})]
+      (get-accounts) => [{:id (:id account-1) :balance 12.34M}
+                         {:id (:id account-2) :balance 56.78M}
+                         {:id (:id account-3) :balance 12.34M}])))
+----
+
+Our second test says we should be able to add multiple accounts to the system, and subsequently be able to find all such accounts using the function `get-accounts`. We can run these tests by switching to the root folder in the shell and executing:
+
+[source, bash]
+----
+$ lein midje
+----
+
+Of course the tests fail so let's proceed to the implementation.
+
+== Accounts
+
+Open `db.clj` and add the `add-account` function:
+
+[source, clojure]
+----
+(defn add-account
+  "Adds an account"
+  [account]
+  (let [balance (bigdec (:balance account))
+        res (second (:tx-data
+                     @(d/transact conn
+                                  [{:db/id           (d/tempid :db.part/user)
+                                    :account/balance balance}])))]
+    {:id      (:e res)
+     :balance (:v res)}))
+----
+
+We use the datomic `transact` function to add an account with a balance. Next we write our `get-account` and `get-accounts` functions to retrieve accounts we create using `add-account`:
+
+[source, clojure]
+----
+(defn get-account
+  "Retrieves an account given it's id"
+  [id]
+  (let [res (first (d/q '[:find ?id ?balance
+                          :in $ ?id
+                          :where [?id :account/balance ?balance]]
+                        (d/db conn)
+                        id))]
+    {:id      (first res)
+     :balance (second res)}))
+
+(defn get-accounts
+  "Retrieves all accounts"
+  []
+  (let [res (d/q '[:find ?a ?balance
+                   :where [?a :account/balance ?balance]]
+                 (d/db conn))]
+    (map #(hash-map :id (first %) :balance (second %)) res)))
+----
+
+We use the datomic `q` function to perform queries. The query language used is https://en.wikipedia.org/wiki/Datalog[datalog]. For an overview of `datalog` you can check out http://www.learndatalogtoday.org/[learndatalogtoday.org]. At this point you should be able to run `lein midje` in the shell and the tests should be green.
+
+== Transfers
+
+Moving on to transfers let's write some more tests in `db_test.clj`:
+
+[source, clojure]
+----
+(fact "Making a transfer between two valid accounts with sufficient funds should succeed"
+  (with-redefs [conn (create-empty-in-memory-db)]
+    (let [from-account (add-account {:balance 1618.00M})
+            to-account (add-account {:balance 200.00M})]
+      (make-transfer {:from-account (:id from-account)
+                      :to-account   (:id to-account)
+                      :amount       12.34M}) => (contains {:from-account (:id from-account)
+                                                           :to-account   (:id to-account)
+                                                           :amount       12.34M
+                                                           :status       :transfer.status/success})
+                      (get-account (:id from-account)) => {:id (:id from-account) :balance (- 1618.00M 12.34M)}
+                      (get-account (:id to-account)) => {:id (:id to-account) :balance (+ 200.00M 12.34M)})))
+----
+This tests starts by creating two accounts in the system and then proceeds to make a transfer between these accounts. Since the accounts are valid we expect that the transfer succeeds i.e. status is set to `transfer.status/success`. Let's now proceed to write some more tests for cases where the transfer fails:
+
+[source, clojure]
+----
+(fact "Making a transfer from an account with insufficient funds should fail with status insufficient-funds"
+  (with-redefs [conn (create-empty-in-memory-db)]
+    (let [from-account (add-account {:balance 18.00M})
+            to-account (add-account {:balance 200.00M})
+              transfer (make-transfer {:from-account (:id from-account) :to-account (:id to-account) :amount 100.23M})]
+      (get-transfer (:id transfer)) => {:id           (:id transfer)
+                                        :from-account (:id from-account)
+                                        :to-account   (:id to-account)
+                                        :amount       100.23M
+                                        :status       :transfer.status/insufficient-funds})))
+
+(fact "Making a transfer from an account which doesn't exist should fail with status no-such-from-account"
+  (with-redefs [conn (create-empty-in-memory-db)]
+    (let [to-account (add-account {:balance 180.00M})
+            transfer (make-transfer {:from-account 928374 :to-account (:id to-account) :amount 80.23M})]
+      (get-transfer (:id transfer)) => {:id           (:id transfer)
+                                        :from-account 928374
+                                        :to-account   (:id to-account)
+                                        :amount       80.23M
+                                        :status       :transfer.status/no-such-from-account})))
+
+(fact "Making a transfer to an account which doesn't exist should fail with status no-such-to-account"
+  (with-redefs [conn (create-empty-in-memory-db)]
+    (let [from-account (add-account {:balance 138.00M})
+              transfer (make-transfer {:from-account (:id from-account) :to-account 98234619 :amount 100.23M})]
+      (get-transfer (:id transfer)) => {:id           (:id transfer)
+                                        :from-account (:id from-account)
+                                        :to-account   98234619
+                                        :amount       100.23M
+                                        :status       :transfer.status/no-such-to-account})))
+----
+
+When we make a transfer we want to simultaneously update the transfer status as well as the balances in the respective accounts (if the transfer is possible) in a transaction. We implement this transaction using a datomic `database function` which we define in our `schema.dtm`:
+
+[source, clojure]
+----
+{:db/id    #db/id[:db.part/user]
+ :db/ident :make-transfer
+ :db/doc   "Performs a transfer between two accounts"
+ :db/fn    #db/fn
+             {:lang   "clojure"
+              :params [db transfer-id from-account to-account amount]
+              :code   (let [f (datomic.api/entity db from-account)
+                            t (datomic.api/entity db to-account)
+                            f-balance (:account/balance f)
+                            t-balance (:account/balance t)]
+                        (cond
+                          (nil? f-balance) [[:db/add transfer-id :transfer/status :transfer.status/no-such-from-account]]
+                          (nil? t-balance) [[:db/add transfer-id :transfer/status :transfer.status/no-such-to-account]]
+                          (< f-balance amount) [[:db/add transfer-id :transfer/status :transfer.status/insufficient-funds]]
+                          :else [[:db/add transfer-id :transfer/status :transfer.status/success]
+                                [:db/add from-account :account/balance (- f-balance amount)]
+                                [:db/add to-account :account/balance (+ t-balance amount)]]))}}
+----
+
+We then use this `database function` in `db.clj` by passing it to `d/transact`:
+
+[source, clojure]
+----
+(defn make-transfer
+  "Performs a transfer"
+  [transfer]
+  (let [amount (bigdec (:amount transfer))
+           res (second (:tx-data
+                        @(d/transact conn
+                                     [{:db/id                 (d/tempid :db.part/user)
+                                       :transfer/from-account (:from-account transfer)
+                                       :transfer/to-account   (:to-account transfer)
+                                       :transfer/amount       amount
+                                       :transfer/status       :transfer.status/pending}])))]
+    (def x @(d/transact conn [[:make-transfer
+                               (:e res)
+                               (:from-account transfer)
+                               (:to-account transfer)
+                               (:amount transfer)]]))
+    (get-transfer (:e res))))
+----
+
+Now let's wire the functions we created in `db.clj` to our API. Go to `core.clj` and modify the endpoint definitions as follows:
+[source, clojure]
+----
+(def app
+  (api
+    {:swagger
+     {:ui   "/"
+      :spec "/swagger.json"
+      :data {:info {:title       "Account Service"
+                    :description "A simple service for handling accounts and transfers between the accounts."}
+             :tags [{:name "api"}]}}}
+
+    (context "/api" []
+             :tags ["api"]
+
+             (POST "/account" []
+                   :return Account
+                   :body [account (describe NewAccount "new account")]
+                   :summary "Creates an account in the system with an initial balance"
+                   (ok (add-account account)))
+
+             (GET "/account/:id" []
+                  :path-params [id :- Long]
+                  :return (s/maybe Account)
+                  :summary "Returns all details relevant to an account"
+                  (ok (get-account id)))
+
+             (POST "/transfer" []
+                   :return Transfer
+                   :body [transfer (describe NewTransfer "new transfer")]
+                   :summary "Requests a transfer between two accounts"
+                   (ok (make-transfer transfer)))
+
+             (GET "/accounts" []
+                  :return [Account]
+                  :summary "Gets all accounts"
+                  (ok (get-accounts))))))
+----
+
+At this point you should be able to go to http://localhost:3000/index.html in your browser and interact with the service:
+
+image::/images/2016-06-16-swagger.png[]
+
+== Conclusion
+
+In this post we have extended the API from an http://www.anthony-galea.com/blog/post/getting-started-with-compojure-api[earlier post] to use datomic for persistence. You can find all the source code on http://github.com/anthonygalea/account-service[github].
