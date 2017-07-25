@@ -1,0 +1,628 @@
++++
+title = "Visualizing the Prisoner's Dilemma"
+date = "2017-07-09"
+categories = ["clojure", "interactive"]
+keywords = ["prisoner's dilemma", "simulation", "iterated prisoner's dilemma", "clojure"]
++++
+
+The grid you see below is a simulation running in your browser of a game called `The Prisoner's Dilemma`. Each cell represents a player, and the colour of the cell indicates the strategy the player is using. Notice how the strategies that perform best gain more territory.
+
+++++
+<div class="imageblock">
+<div class="content">
+  <canvas id="canvas-intro" width="300" height="300"></canvas>
+</div>
+</div>
+
+<div class="listingblock" style="display:none"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="6000000">
+
+(ns prisoners.dilemma
+  (:require-macros [cljs.core.async.macros :as async.macros])
+  (:require [cljs.core.async :as async]))
+
+(defmulti play :strategy)
+
+(defmethod play :always-cooperate [_]
+  :cooperate)
+
+(defmethod play :always-defect [_]
+  :defect)
+
+(defmethod play :tit-for-tat [{:keys [opponent-last-decision]}]
+  (if (nil? opponent-last-decision)
+    :cooperate
+    opponent-last-decision))
+
+(defn match-results
+  ([s1 s2] (match-results s1 s2 nil nil))
+  ([s1 s2 lm1 lm2]
+    (let [m1 (play {:strategy s1 :opponent-last-decision lm2})
+          m2 (play {:strategy s2 :opponent-last-decision lm1})
+          score (case [m1 m2]
+                  [:cooperate :cooperate] [3 3]
+                  [:defect    :cooperate] [5 0]
+                  [:cooperate :defect   ] [0 5]
+                  [:defect    :defect   ] [1 1])]
+      (lazy-seq
+         (cons [score m1 m2] (match-results s1 s2 m1 m2))))))
+
+(defn random-player-strategies [strategy-distribution]
+  (let [strategies (reduce-kv #(into %1 (repeat %3 %2))
+                              []
+                              strategy-distribution)]
+    (repeatedly #(rand-nth strategies))))
+
+(defn render-player-strategies! [canvas strategies]
+  (let [ctx (.getContext canvas "2d")
+        width (.-width canvas)
+        height (.-height canvas)
+        grid-width (js/Math.sqrt (count strategies))
+        cell-width (/ width grid-width)
+        cell-height (/ height grid-width)]
+    (.clearRect ctx 0 0 width height)
+    (doseq [[i strategy] (map-indexed vector strategies)]
+      (set! (.-fillStyle ctx) (case strategy
+                                :always-cooperate "green"
+                                :always-defect    "red"
+                                :tit-for-tat      "orange"))
+      (.fillRect ctx
+                 (* (mod i grid-width) cell-width)
+                 (* (quot i grid-width) cell-height)
+                 (dec cell-width)
+                 (dec cell-height)))))
+
+(defn compare-grid [g l r]
+ (let [c (compare (mod l g) (mod r g))]
+   (if (zero? c)
+     (compare l r)
+     c)))
+
+(defn generate-matches [grid-width]
+  (let [no-of-players (* grid-width grid-width)
+        players-horizontal (range no-of-players)
+        players-vertical (sort (partial compare-grid grid-width)
+                               (range no-of-players))
+        players (concat players-horizontal players-vertical)]
+    (mapcat #(partition 2 1 %)
+            (partition grid-width players))))
+
+(defn generate-neighbours [matches]
+  (reduce (fn [m d]
+               (let [k (first d)
+                     v (get m k [(first d)])]
+                 (assoc m k (conj v (second d)))))
+             []
+             (mapcat #(vector % (reverse %)) matches)))
+
+(defn matches-results [player-strategies match-last-decisions no-of-plays]
+  (reduce (fn [results match]
+            (let [[strategy-p1 strategy-p2] (vals (select-keys player-strategies match))
+                  [last-decision-p1 last-decision-p2] (match-last-decisions match)
+                  result (reduce (fn [[s1 _ _][s2 m1 m2]]
+                                   (vector (map + s1 s2) m1 m2))
+                                 (take no-of-plays
+                                   (match-results strategy-p1 strategy-p2 last-decision-p1 last-decision-p2)))]
+              (assoc results match result)))
+          {}
+          (keys match-last-decisions)))
+
+(defn get-scores [matches-results]
+  (into []
+    (vals
+      (reduce-kv (fn [scores match result]
+                    (merge-with + scores (zipmap match (first result))))
+                 (sorted-map)
+                 matches-results))))
+
+(defn calculate-next-strategies [current-strategies scores neighbours]
+  (into []
+        (map-indexed (fn [i s]
+	                     (let [n (neighbours i)
+                             sn (select-keys scores n)
+                             m (val (apply max-key val sn))
+                             w (into {} (filter #(= (val %) m) sn))]
+                         (if (w i)
+                           s
+                           (current-strategies (rand-nth (keys w))))))
+             		 current-strategies)))
+
+(defn calculate-changed-strategies [previous-strategies next-strategies]
+  (into #{}
+    (filter #(not= (previous-strategies %) (next-strategies %)))
+            (range (count previous-strategies))))
+
+(defn get-last-decisions [matches-results changed-strategies]
+  (reduce-kv (fn [scores match result]
+               (let [last-decisions (if (some changed-strategies match)
+                                  [nil nil]
+                                  (rest result))]
+                 (assoc scores match last-decisions)))
+              {}
+              matches-results))
+
+(defn frame-seq
+  ([grid-width no-of-plays strategy-distribution]
+    (let [matches        (generate-matches grid-width)
+          neighbours     (generate-neighbours matches)
+          strategies     (->> (random-player-strategies strategy-distribution)
+                              (take (* grid-width grid-width))
+                              (into []))
+          last-decisions (zipmap matches (repeat [nil nil]))]
+      (lazy-seq
+        (cons strategies (frame-seq neighbours strategies last-decisions no-of-plays)))))
+
+  ([neighbours previous-strategies previous-last-decisions no-of-plays]
+    (let [results             (matches-results previous-strategies previous-last-decisions no-of-plays)
+          scores              (get-scores results)
+          next-strategies     (calculate-next-strategies previous-strategies scores neighbours)
+          changed-strategies  (calculate-changed-strategies previous-strategies next-strategies)
+          next-last-decisions (get-last-decisions results changed-strategies)]
+      (lazy-seq
+        (cons next-strategies (frame-seq neighbours next-strategies next-last-decisions no-of-plays))))))
+
+(defn render-frames [strategy-frames canvas-id wait-msec no-of-frames]
+  (let [canvas (js/document.getElementById canvas-id)]
+    (async.macros/go
+      (doseq [frame (take no-of-frames strategy-frames)]
+        (.requestAnimationFrame js/window #(render-player-strategies! canvas frame))
+        (async/&lt;! (async/timeout wait-msec))))))
+
+</code></pre></div></div>
+
+<div class="listingblock" style="display:none"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="6000000" data-loop-msec="12000">
+
+(def intro-frames
+  (frame-seq 15 5 {:always-cooperate 1
+                   :always-defect    1
+                   :tit-for-tat      2}))
+
+(render-frames intro-frames "canvas-intro" 1000 10)
+
+</code></pre></div></div>
+++++
+
+In this article we will walk through the code that runs the simulation, but first let's explain the rules of the game:
+
+. each player makes a decision to either `cooperate` or `defect`
+. the players cannot communicate with each other while making their decision
+. the points the players get after deciding are determined by the following table:
+
+[width="25%"]
+|=======
+2.2+| 2+| player 2
+| cooperate | defect
+.2+| player 1 | cooperate  | (3,3)      | (0,5)
+| defect     | (5,0)      | (1,1)
+|=======
+
+For example, if player 1 defects and player 2 cooperates, player 1 would get 5 points and player 2 would get 0 points. When the game is played more than once it is known as https://en.wikipedia.org/wiki/Prisoner%27s_dilemma#The_iterated_prisoner.27s_dilemma[Iterated Prisoner's dilemma] and it's what we are simulating in this article.
+
+Now that the game is clear let's take a look at the implementation. We will have 3 simple strategies:
+
+. `always-cooperate` - keep cooperating no matter what the opponent does
+. `always-defect` - keep defecting no matter what the opponent does
+. `tit-for-tat` - start by cooperating and subsequently do whatever the opponent did in the previous round
+
+We can capture these strategies using a multimethod:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defmulti play :strategy)
+
+(defmethod play :always-cooperate [_]
+  :cooperate)
+
+(defmethod play :always-defect [_]
+  :defect)
+
+(defmethod play :tit-for-tat [{:keys [opponent-last-decision]}]
+  (if (nil? opponent-last-decision)
+    :cooperate
+    opponent-last-decision))
+
+(play {:strategy               :tit-for-tat
+       :opponent-last-decision :defect})
+
+</code></pre></div></div>
+++++
+
+(Note: You can edit the code blocks directly in the browser. Just press `Ctrl+Enter` to trigger reevaluation.)
+
+Given any 2 strategies we can generates a sequence of results containing a `score` and the two `decisions` made:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn match-results
+  ([s1 s2] (match-results s1 s2 nil nil))
+  ([s1 s2 lm1 lm2]
+    (let [m1 (play {:strategy s1 :opponent-last-decision lm2})
+          m2 (play {:strategy s2 :opponent-last-decision lm1})
+          score (case [m1 m2]
+                  [:cooperate :cooperate] [3 3]
+                  [:defect    :cooperate] [5 0]
+                  [:cooperate :defect   ] [0 5]
+                  [:defect    :defect   ] [1 1])]
+      (lazy-seq
+         (cons [score m1 m2] (match-results s1 s2 m1 m2))))))
+
+</code></pre></div></div>
+++++
+
+So if a player using `tit-for-tat` and another using `always-defect` play 4 rounds:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(take 4 (match-results :tit-for-tat :always-defect))
+
+</code></pre></div></div>
+++++
+
+For the first frame we generate random strategies:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(take 9
+  (repeatedly
+    #(rand-nth [:always-cooperate :always-defect :tit-for-tat])))
+
+</code></pre></div></div>
+++++
+
+This works, but let's write a version that takes a `strategy-distribution` so that we can try out different densities of a particular strategy:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(def strategy-distribution {:always-cooperate 2
+                            :always-defect    1
+                            :tit-for-tat      5})
+
+(defn random-player-strategies [strategy-distribution]
+  (let [strategies (reduce-kv #(into %1 (repeat %3 %2))
+                              []
+                              strategy-distribution)]
+    (repeatedly #(rand-nth strategies))))
+
+(take 9 (random-player-strategies strategy-distribution))
+
+</code></pre></div></div>
+++++
+
+Now that we can generate strategies we can render them to a canvas:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn render-player-strategies! [canvas strategies]
+  (let [ctx (.getContext canvas "2d")
+        width (.-width canvas)
+        height (.-height canvas)
+        grid-width (js/Math.sqrt (count strategies))
+        cell-width (/ width grid-width)
+        cell-height (/ height grid-width)]
+    (.clearRect ctx 0 0 width height)
+    (doseq [[i strategy] (map-indexed vector strategies)]
+      (set! (.-fillStyle ctx) (case strategy
+                                :always-cooperate "green"
+                                :always-defect    "red"
+                                :tit-for-tat      "orange"))
+      (.fillRect ctx
+                 (* (mod i grid-width) cell-width)
+                 (* (quot i grid-width) cell-height)
+                 (dec cell-width)
+                 (dec cell-height)))))
+</code></pre></div></div>
+++++
+
+Let's try it out:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(def grid-width 15)
+
+(render-player-strategies!
+  (js/document.getElementById "canvas-render")
+  (take (* grid-width grid-width)
+        (random-player-strategies {:always-cooperate 4
+                                   :always-defect    4
+                                   :tit-for-tat      2})))
+
+</code></pre></div></div>
+
+<div class="imageblock"><div class="content">
+  <canvas id="canvas-render" width="300" height="300"></canvas>
+</div></div>
+++++
+
+As you can see in the diagram below, each player will play against his neighbours. In other words, there is a `match` for each one of the red lines between the cells:
+
+++++
+<div class="imageblock"><div class="content">
+  <svg width="200" height="200">
+    <rect x="0" y="0" width="50" height="50" style="fill:orange"/>
+    <text x="21" y="31">0</text>
+    <rect x="75" y="0" width="50" height="50" style="fill:orange"/>
+    <text x="93" y="31">1</text>
+    <rect x="150" y="0" width="50" height="50" style="fill:orange"/>
+    <text x="170" y="31">2</text>
+    <rect x="0" y="75" width="50" height="50" style="fill:orange"/>
+    <text x="21" y="106">3</text>
+    <rect x="75" y="75" width="50" height="50" style="fill:orange"/>
+    <text x="93" y="106">4</text>
+    <rect x="150" y="75" width="50" height="50" style="fill:orange"/>
+    <text x="170" y="106">5</text>
+    <rect x="0" y="150" width="50" height="50" style="fill:orange"/>
+    <text x="21" y="181">6</text>
+    <rect x="75" y="150" width="50" height="50" style="fill:orange"/>
+    <text x="93" y="181">7</text>
+    <rect x="150" y="150" width="50" height="50" style="fill:orange"/>
+    <text x="170" y="181">8</text>
+
+    <line x1="50" y1="25" x2="75" y2="25" style="stroke:red;stroke-width:5"/>
+    <line x1="125" y1="25" x2="150" y2="25" style="stroke:red;stroke-width:5"/>
+    <line x1="50" y1="100" x2="75" y2="100" style="stroke:red;stroke-width:5"/>
+    <line x1="125" y1="100" x2="150" y2="100" style="stroke:red;stroke-width:5"/>
+    <line x1="50" y1="175" x2="75" y2="175" style="stroke:red;stroke-width:5"/>
+    <line x1="125" y1="175" x2="150" y2="175" style="stroke:red;stroke-width:5"/>
+
+    <line x1="25" y1="50" x2="25" y2="75" style="stroke:red;stroke-width:5"/>
+    <line x1="25" y1="125" x2="25" y2="150" style="stroke:red;stroke-width:5"/>
+    <line x1="100" y1="50" x2="100" y2="75" style="stroke:red;stroke-width:5"/>
+    <line x1="100" y1="125" x2="100" y2="150" style="stroke:red;stroke-width:5"/>
+    <line x1="175" y1="50" x2="175" y2="75" style="stroke:red;stroke-width:5"/>
+    <line x1="175" y1="125" x2="175" y2="150" style="stroke:red;stroke-width:5"/>
+  </svg>
+</div></div>
+++++
+
+Given a certain `grid-width` we can generate a list of these `matches`:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn compare-grid [g l r]
+ (let [c (compare (mod l g) (mod r g))]
+   (if (zero? c)
+     (compare l r)
+     c)))
+
+(defn generate-matches [grid-width]
+  (let [no-of-players (* grid-width grid-width)
+        players-horizontal (range no-of-players)
+        players-vertical (sort (partial compare-grid grid-width)
+                               (range no-of-players))
+        players (concat players-horizontal players-vertical)]
+    (mapcat #(partition 2 1 %)
+            (partition grid-width players))))
+
+(def m (generate-matches 3))
+
+m
+</code></pre></div></div>
+++++
+
+Given the `matches` we can build a vector containing the `neighbours` of a particular player:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn generate-neighbours [matches]
+  (reduce (fn [m d]
+               (let [k (first d)
+                     v (get m k [(first d)])]
+                 (assoc m k (conj v (second d)))))
+             []
+             (mapcat #(vector % (reverse %)) matches)))
+
+(def n (generate-neighbours m))
+
+n
+</code></pre></div></div>
+++++
+
+So for example the neighbours for player 4 would be:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(n 4)
+
+</code></pre></div></div>
+++++
+
+Ok now given the `strategies` and `last-decisions` from the previous matches, we can calculate the next set of results:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn matches-results [player-strategies match-last-decisions no-of-matches-per-frame]
+  (reduce
+    (fn [results match]
+      (let [[strategy-p1 strategy-p2] (vals (select-keys player-strategies match))
+            [last-decision-p1 last-decision-p2] (match-last-decisions match)
+            result (reduce (fn [[s1 _ _][s2 m1 m2]]
+                             (vector (map + s1 s2) m1 m2))
+                           (take no-of-matches-per-frame
+                             (match-results strategy-p1 strategy-p2 last-decision-p1 last-decision-p2)))]
+        (assoc results match result)))
+    {}
+    (keys match-last-decisions)))
+
+(def frame-1
+  (into []
+        (take 9 (random-player-strategies {:always-cooperate 1
+                                           :always-defect    1
+                                           :tit-for-tat      2}))))
+
+(def mr
+  (matches-results frame-1
+                   (zipmap m (repeat [nil nil]))
+                   5))
+
+mr
+</code></pre></div></div>
+++++
+
+To get the final scores we will need to aggregate the results:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn get-scores [matches-results]
+  (into []
+    (vals
+      (reduce-kv (fn [scores match result]
+                    (merge-with + scores (zipmap match (first result))))
+                 (sorted-map)
+                 matches-results))))
+
+(def s (get-scores mr))
+
+s
+</code></pre></div></div>
+++++
+
+We calculate the strategies for the next frame using the `strategies` and `scores` from the current frame and the `neighbours` vector:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn calculate-next-strategies [current-strategies scores neighbours]
+  (into []
+        (map-indexed (fn [i s]
+	                     (let [n (neighbours i)
+                             sn (select-keys scores n)
+                             m (val (apply max-key val sn))
+                             w (into {} (filter #(= (val %) m) sn))]
+                         (if (w i)
+                           s
+                           (current-strategies (rand-nth (keys w))))))
+             		 current-strategies)))
+
+(def frame-2 (calculate-next-strategies frame-1 s n))
+
+frame-2
+</code></pre></div></div>
+++++
+
+Given any two frames with strategies we can find out which players have changed strategies:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn calculate-changed-strategies [previous-strategies next-strategies]
+  (into #{}
+    (filter #(not= (previous-strategies %) (next-strategies %)))
+            (range (count previous-strategies))))
+
+(calculate-changed-strategies frame-1 frame-2)
+
+</code></pre></div></div>
+++++
+
+And when extracting the `last-decisions` from the `matches-results` we reset to `[nil nil]` those where the players changed strategies:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn get-last-decisions [matches-results changed-strategies]
+  (reduce-kv (fn [scores match result]
+               (let [last-decisions (if (some changed-strategies match)
+                                      [nil nil]
+                                      (rest result))]
+                 (assoc scores match last-decisions)))
+              {}
+              matches-results))
+
+</code></pre></div></div>
+++++
+
+Using the building blocks above we can build a lazy sequence where each element is a `frame` in the simulation:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn frame-seq
+  ([grid-width no-of-plays strategy-distribution]
+    (let [matches        (generate-matches grid-width)
+          neighbours     (generate-neighbours matches)
+          strategies     (->> (random-player-strategies strategy-distribution)
+                              (take (* grid-width grid-width))
+                              (into []))
+          last-decisions (zipmap matches (repeat [nil nil]))]
+      (lazy-seq
+        (cons strategies (frame-seq neighbours strategies last-decisions no-of-plays)))))
+
+  ([neighbours previous-strategies previous-last-decisions no-of-plays]
+    (let [results             (matches-results previous-strategies previous-last-decisions no-of-plays)
+          scores              (get-scores results)
+          next-strategies     (calculate-next-strategies previous-strategies scores neighbours)
+          changed-strategies  (calculate-changed-strategies previous-strategies next-strategies)
+          next-last-decisions (get-last-decisions results changed-strategies)]
+      (lazy-seq
+        (cons next-strategies (frame-seq neighbours next-strategies next-last-decisions no-of-plays))))))
+
+</code></pre></div></div>
+++++
+
+Now that we have defined the sequence it's easy to render it:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="30000" data-eval-idle-msec="4000">
+
+(defn render-frames [strategy-frames canvas-id wait-msec no-of-frames]
+  (let [canvas (js/document.getElementById canvas-id)]
+    (async.macros/go
+      (doseq [frame (take no-of-frames strategy-frames)]
+        (.requestAnimationFrame js/window #(render-player-strategies! canvas frame))
+        (async/&lt;! (async/timeout wait-msec))))))
+
+</code></pre></div></div>
+
+++++
+
+We just take `no-of-frames` frames from the sequence and for each one call `requestAnimationFrame` with a timeout of `wait-msec` between each frame. Feel free to experiment with the values below. Remember press `Ctrl+Enter` to rerender after changing something:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000" data-eval-idle-msec="60000000">
+
+(def strategy-frames
+  (frame-seq 15 5 {:always-cooperate 1
+                   :always-defect    1
+                   :tit-for-tat      2}))
+
+(render-frames strategy-frames "canvas-walkthrough" 500 10)
+
+</code></pre></div></div>
+
+<div class="imageblock"><div class="content">
+  <canvas id="canvas-walkthrough" width="300" height="300"></canvas>
+</div></div>
+++++
+
+The interactive code snippets in this article are powered by https://github.com/viebel/klipse[KLIPSE].

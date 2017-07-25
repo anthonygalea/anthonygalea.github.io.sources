@@ -7,14 +7,12 @@ keywords = ["compojure-api", "tutorial", "introduction", "compojure", "clojure"]
 
 :source-highlighter: pygments
 
-== Introduction
-
-In this post I will give a walkthrough of building a simple service using https://github.com/metosin/compojure-api[compojure-api]. As a use case we will build a simple account service that offers two functions:
+In this post, I will give a walkthrough of building a simple service using https://github.com/metosin/compojure-api[compojure-api]. As a use case we will build a simple account service that offers two functions:
 
 * creating an account with some initial balance
 * transferring some amount from one account to another.
 
-By the end of this tutorial you should have a swagger UI that allows to test these two calls:
+By the end of this tutorial you should have a swagger UI that allows testing these two calls:
 
 image::/images/2016-04-28-swagger.png[]
 
@@ -116,7 +114,7 @@ With the ring server still running, change the message in the `handler` function
 
 == Using compojure-api
 
-The https://github.com/metosin/compojure-api[compojure-api] library makes it very easy to build web APIs. It is built on top of https://github.com/weavejester/compojure[compojure] and https://github.com/ring-clojure/ring[ring]. It also uses the https://github.com/plumatic/schema[schema] library for describing and validating requests, and https://github.com/metosin/ring-swagger[ring-swagger] to expose API documentation. First let's add some requires in `core.clj`:
+The https://github.com/metosin/compojure-api[compojure-api] library makes it very easy to build web APIs. It is built on top of https://github.com/weavejester/compojure[compojure] and https://github.com/ring-clojure/ring[ring]. It also uses the https://github.com/plumatic/schema[schema] library for describing and validating requests, and https://github.com/metosin/ring-swagger[ring-swagger] to expose API documentation. First, let's add some requires in `core.clj`:
 
 [source, clojure]
 ----
@@ -127,7 +125,7 @@ The https://github.com/metosin/compojure-api[compojure-api] library makes it ver
             [ring.swagger.schema :as rs]))
 ----
 
-Next we define schemas for the payloads:
+Next, we define schemas for the payloads:
 [source, clojure]
 ----
 (s/defschema Account
@@ -201,4 +199,4 @@ $ lein ring uberwar
 
 == Conclusion
 
-In this post we have exposed a simple API using https://github.com/metosin/compojure-api[compojure-api]. You can find all the source code on http://github.com/anthonygalea/account-service[github]. In the next post we will show how to use this in conjunction with http://www.datomic.com[datomic] for persistence.
+In this post, we have exposed a simple API using https://github.com/metosin/compojure-api[compojure-api]. You can find all the source code on http://github.com/anthonygalea/account-service[GitHub]. In the next post, we will show how to use this in conjunction with http://www.datomic.com[Datomic] for persistence.

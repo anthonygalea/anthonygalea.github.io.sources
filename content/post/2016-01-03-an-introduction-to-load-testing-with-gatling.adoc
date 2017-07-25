@@ -7,8 +7,6 @@ keywords = ["gatling", "load", "testing", "tutorial", "introduction"]
 
 :source-highlighter: pygments
 
-== Introduction
-
 Many developers are familiar with the http://jmeter.apache.org/[Apache JMeter] or https://httpd.apache.org/docs/2.2/programs/ab.html[Apache Bench] tools for writing load tests. http://gatling.io[Gatling] is an alternative tool which provides:
 
 - a concise Scala DSL in order to <<describe>>
@@ -147,7 +145,4 @@ mvn gatling:execute -Dgatling.simulationClass=com.company.service.YourSimulation
 
 == Conclusion
 
-I have found Gatling to be a very effective tool for load testing. The DSL is succinct and the reports generated provide all the information typically needed out of the box. Other alternatives which I have not yet experimented with are:
-
-* https://github.com/newsapps/beeswithmachineguns[Bees with Machine Guns]
-* http://locust.io/[Locust]
+I have found Gatling to be a very effective tool for load testing. The DSL is succinct and the reports generated provide all the information typically needed out of the box.

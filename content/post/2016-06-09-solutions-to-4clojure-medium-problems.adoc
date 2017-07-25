@@ -1,156 +1,156 @@
 +++
-title = "Solutions to 4clojure Medium Problems"
+title = "Solutions to 4Clojure Medium Problems"
 date = "2016-06-09"
-categories = ["clojure"]
+categories = ["clojure", "interactive"]
 keywords = ["4clojure", "medium", "solutions", "problems", "clojure"]
 +++
 
-:source-highlighter: pygments
+This is the third post on solutions to http://www.4clojure.com[4Clojure] problems. Once again all solutions are on https://github.com/anthonygalea/solutions-4clojure[GitHub], and if you have any suggestions for alternative solutions I would love to hear from you.
 
-== Introduction
+== 43. Reverse Interleave
+Write a function which reverses the interleave process into x number of subsequences.
 
-This is the third post on solutions to http://www.4clojure.com[4clojure] problems. Once again all solutions are on https://github.com/anthonygalea/solutions-4clojure[github], and if you have any suggestions for alternative solutions I would love to hear from you.
-
-== Solutions
-
-=== 43. Reverse Interleave
-[source, clojure]
+[source, klipse]
 ----
-;; Write a function which reverses the interleave process into x number of subsequences.
-(= (__ [1 2 3 4 5 6] 2) '((1 3 5) (2 4 6)))
-(= (__ (range 9) 3) '((0 3 6) (1 4 7) (2 5 8)))
-(= (__ (range 10) 5) '((0 5) (1 6) (2 7) (3 8) (4 9)))
-
-(fn reverse-interleave [s n]
+(defn reverse-interleave [s n]
   ((fn reverse-interleave [s n i]
      (if (= i 1)
        (list (take-nth n s))
        (cons (take-nth n s) (reverse-interleave (rest s) n (dec i)))))
    s n n))
+
+[(= (reverse-interleave [1 2 3 4 5 6] 2) '((1 3 5) (2 4 6)))
+ (= (reverse-interleave (range 9) 3) '((0 3 6) (1 4 7) (2 5 8)))
+ (= (reverse-interleave (range 10) 5) '((0 5) (1 6) (2 7) (3 8) (4 9)))]
 ----
 
-=== 44. Rotate Sequence
-[source, clojure]
-----
-;; Write a function which can rotate a sequence in either direction.
-(= (__ 2 [1 2 3 4 5]) '(3 4 5 1 2))
-(= (__ -2 [1 2 3 4 5]) '(4 5 1 2 3))
-(= (__ 6 [1 2 3 4 5]) '(2 3 4 5 1))
-(= (__ 1 '(:a :b :c)) '(:b :c :a))
-(= (__ -4 '(:a :b :c)) '(:c :a :b))
+== 44. Rotate Sequence
+Write a function which can rotate a sequence in either direction.
 
-(fn rotate-sequence [n s]
+[source, klipse]
+----
+(defn rotate-sequence [n s]
   (let [c (mod n (count s))]
     (concat (drop c s) (take c s))))
+
+[(= (rotate-sequence 2 [1 2 3 4 5]) '(3 4 5 1 2))
+ (= (rotate-sequence -2 [1 2 3 4 5]) '(4 5 1 2 3))
+ (= (rotate-sequence 6 [1 2 3 4 5]) '(2 3 4 5 1))
+ (= (rotate-sequence 1 '(:a :b :c)) '(:b :c :a))
+ (= (rotate-sequence -4 '(:a :b :c)) '(:c :a :b))]
 ----
 
-=== 46. Flipping out
-[source, clojure]
-----
-;; Write a higher-order function which flips the order of the arguments of an input function.
-(= 3 ((__ nth) 2 [1 2 3 4 5]))
-(= true ((__ >) 7 8))
-(= 4 ((__ quot) 2 8))
-(= [1 2 3] ((__ take) [1 2 3 4 5] 3))
+== 46. Flipping out
+Write a higher-order function which flips the order of the arguments of an input function.
 
-(fn flipping-out [f]
+[source, klipse]
+----
+(defn flipping-out [f]
   (fn [a b]
     (f b a)))
+
+[(= 3 ((flipping-out nth) 2 [1 2 3 4 5]))
+ (= true ((flipping-out >) 7 8))
+ (= 4 ((flipping-out quot) 2 8))
+ (= [1 2 3] ((flipping-out take) [1 2 3 4 5] 3))]
 ----
 
-=== 50. Split by Type
-[source, clojure]
-----
-;; Write a function which takes a sequence consisting of items with different types and splits them up into a set of homogeneous sub-sequences. The internal order of each sub-sequence should be maintained, but the sub-sequences themselves can be returned in any order (this is why 'set' is used in the test cases).
-(= (set (__ [1 :a 2 :b 3 :c])) #{[1 2 3] [:a :b :c]})
-(= (set (__ [:a "foo"  "bar" :b])) #{[:a :b] ["foo" "bar"]})
-(= (set (__ [[1 2] :a [3 4] 5 6 :b])) #{[[1 2] [3 4]] [:a :b] [5 6]})
+== 50. Split by Type
+Write a function which takes a sequence consisting of items with different types and splits them up into a set of homogeneous sub-sequences. The internal order of each sub-sequence should be maintained, but the sub-sequences themselves can be returned in any order (this is why 'set' is used in the test cases).
 
-(fn split-by-type [v]
+[source, klipse]
+----
+(defn split-by-type [v]
   (vals (group-by #(type %) v)))
+
+[(= (set (split-by-type [1 :a 2 :b 3 :c])) #{[1 2 3] [:a :b :c]})
+ (= (set (split-by-type [:a "foo"  "bar" :b])) #{[:a :b] ["foo" "bar"]})
+ (= (set (split-by-type [[1 2] :a [3 4] 5 6 :b])) #{[[1 2] [3 4]] [:a :b] [5 6]})]
 ----
 
-=== 54. Partition a Sequence
-[source, clojure]
-----
-;; Write a function which returns a sequence of lists of x items each. Lists of less than x items should not be returned.
-(= (__ 3 (range 9)) '((0 1 2) (3 4 5) (6 7 8)))
-(= (__ 2 (range 8)) '((0 1) (2 3) (4 5) (6 7)))
-(= (__ 3 (range 8)) '((0 1 2) (3 4 5)))
+== 54. Partition a Sequence
+Write a function which returns a sequence of lists of x items each. Lists of less than x items should not be returned.
 
-(fn partition-a-sequence [n s]
+[source, klipse]
+----
+(defn partition-a-sequence [n s]
   (map #(take n (drop % s))
        (range 0
               (* (quot (count s) n) n)
               n)))
+
+[(= (partition-a-sequence 3 (range 9)) '((0 1 2) (3 4 5) (6 7 8)))
+ (= (partition-a-sequence 2 (range 8)) '((0 1) (2 3) (4 5) (6 7)))
+ (= (partition-a-sequence 3 (range 8)) '((0 1 2) (3 4 5)))]
 ----
 
-=== 55. Count Occurrences
-[source, clojure]
-----
-;; Write a function which returns a map containing the number of occurrences of each distinct item in a sequence.
-(= (__ [1 1 2 3 2 1 1]) {1 4, 2 2, 3 1})
-(= (__ [:b :a :b :a :b]) {:a 2, :b 3})
-(= (__ '([1 2] [1 3] [1 3])) {[1 2] 1, [1 3] 2})
+== 55. Count Occurrences
+Write a function which returns a map containing the number of occurrences of each distinct item in a sequence.
 
-(fn count-occurrences [s]
+[source, klipse]
+----
+(defn count-occurrences [s]
   (into {} (map #(vector (first %) (count (second %))) (group-by identity s))))
+
+[(= (count-occurrences [1 1 2 3 2 1 1]) {1 4, 2 2, 3 1})
+ (= (count-occurrences [:b :a :b :a :b]) {:a 2, :b 3})
+ (= (count-occurrences '([1 2] [1 3] [1 3])) {[1 2] 1, [1 3] 2})]
 ----
 
-=== 56. Find Distinct Items
-[source, clojure]
-----
-;; Write a function which removes the duplicates from a sequence. Order of the items must be maintained.
-(= (__ [1 2 1 3 1 2 4]) [1 2 3 4])
-(= (__ [:a :a :b :b :c :c]) [:a :b :c])
-(= (__ '([2 4] [1 2] [1 3] [1 3])) '([2 4] [1 2] [1 3]))
-(= (__ (range 50)) (range 50))
+== 56. Find Distinct Items
+Write a function which removes the duplicates from a sequence. Order of the items must be maintained.
 
-(fn find-distinct-items [s]
+[source, klipse]
+----
+(defn find-distinct-items [s]
   (sort-by #(.indexOf s %)
            (keys (group-by identity s))))
+
+[(= (find-distinct-items [1 2 1 3 1 2 4]) [1 2 3 4])
+ (= (find-distinct-items [:a :a :b :b :c :c]) [:a :b :c])
+ (= (find-distinct-items '([2 4] [1 2] [1 3] [1 3])) '([2 4] [1 2] [1 3]))
+ (= (find-distinct-items (range 50)) (range 50))]
 ----
 
-=== 58. Function Composition
-[source, clojure]
-----
-;; Write a function which allows you to create function compositions. The parameter list should take a variable number of functions, and create a function that applies them from right-to-left.
-(= [3 2 1] ((__ rest reverse) [1 2 3 4]))
-(= 5 ((__ (partial + 3) second) [1 2 3 4]))
-(= true ((__ zero? #(mod % 8) +) 3 5 7 9))
-(= "HELLO" ((__ #(.toUpperCase %) #(apply str %) take) 5 "hello world"))
+== 58. Function Composition
+Write a function which allows you to create function compositions. The parameter list should take a variable number of functions, and create a function that applies them from right-to-left.
 
-(fn function-composition [& functions]
+[source, klipse]
+----
+(defn function-composition [& functions]
   (fn [& args]
     (first
       (reduce (fn [result function]
                 (list (apply function result)))
               args
               (reverse functions)))))
+
+[(= [3 2 1] ((function-composition rest reverse) [1 2 3 4]))
+ (= 5 ((function-composition (partial + 3) second) [1 2 3 4]))
+ (= true ((function-composition zero? #(mod % 8) +) 3 5 7 9))
+ (= "HELLO" ((function-composition #(.toUpperCase %) #(apply str %) take) 5 "hello world"))]
 ----
 
-=== 59. Juxtaposition
-[source, clojure]
-----
-;; Take a set of functions and return a new function that takes a variable number of arguments and returns a sequence containing the result of applying each function left-to-right to the argument list.
-(= [21 6 1] ((__ + max min) 2 3 5 1 6 4))
-(= ["HELLO" 5] ((__ #(.toUpperCase %) count) "hello"))
-(= [2 6 4] ((__ :a :c :b) {:a 2, :b 4, :c 6, :d 8 :e 10}))
+== 59. Juxtaposition
+Take a set of functions and return a new function that takes a variable number of arguments and returns a sequence containing the result of applying each function left-to-right to the argument list.
 
-(fn juxtaposition [& functions]
+[source, klipse]
+----
+(defn juxtaposition [& functions]
   (fn [& parameters]
     (map #(apply % parameters) functions)))
+
+[(= [21 6 1] ((juxtaposition + max min) 2 3 5 1 6 4))
+ (= ["HELLO" 5] ((juxtaposition #(.toUpperCase %) count) "hello"))
+ (= [2 6 4] ((juxtaposition :a :c :b) {:a 2, :b 4, :c 6, :d 8 :e 10}))]
 ----
 
-=== 60. Sequence Reductions
-[source, clojure]
-----
-;; Write a function which behaves like reduce, but returns each intermediate value of the reduction. Your function must accept either two or three arguments, and the return sequence must be lazy.
-(= (take 5 (__ + (range))) [0 1 3 6 10])
-(= (__ conj [1] [2 3 4]) [[1] [1 2] [1 2 3] [1 2 3 4]])
-(= (last (__ * 2 [3 4 5])) (reduce * 2 [3 4 5]) 120)
+== 60. Sequence Reductions
+Write a function which behaves like reduce, but returns each intermediate value of the reduction. Your function must accept either two or three arguments, and the return sequence must be lazy.
 
-(fn sequence-reductions
+[source, klipse]
+----
+(defn sequence-reductions
   ([f s]
    (sequence-reductions f (first s) (rest s)))
   ([f i s]
@@ -160,161 +160,147 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
              (sequence-reductions f
                                   (f i (first s))
                                   (rest s)))))))
+
+[(= (take 5 (sequence-reductions + (range))) [0 1 3 6 10])
+ (= (sequence-reductions conj [1] [2 3 4]) [[1] [1 2] [1 2 3] [1 2 3 4]])
+ (= (last (sequence-reductions * 2 [3 4 5])) (reduce * 2 [3 4 5]) 120)]
 ----
 
-=== 65. Black Box Testing
-[source, clojure]
-----
-;; Clojure has many sequence types, which act in subtly different ways. The core functions typically convert them into a uniform "sequence" type and work with them that way, but it can be important to understand the behavioral and performance differences so that you know which kind is appropriate for your application.
-;; Write a function which takes a collection and returns one of :map, :set, :list, or :vector - describing the type of collection it was given.
-;; You won't be allowed to inspect their class or use the built-in predicates like list? - the point is to poke at them and understand their behavior.
-(= :map (__ {:a 1, :b 2}))
-(= :list (__ (range (rand-int 20))))
-(= :vector (__ [1 2 3 4 5 6]))
-(= :set (__ #{10 (rand-int 5)}))
-(= [:map :set :vector :list] (map __ [{} #{} [] ()]))
+== 65. Black Box Testing
+Clojure has many sequence types, which act in subtly different ways. The core functions typically convert them into a uniform "sequence" type and work with them that way, but it can be important to understand the behavioral and performance differences so that you know which kind is appropriate for your application. Write a function which takes a collection and returns one of :map, :set, :list, or :vector - describing the type of collection it was given. You won't be allowed to inspect their class or use the built-in predicates like list? - the point is to poke at them and understand their behavior.
 
-(fn black-box-testing [s]
+[source, klipse]
+----
+(defn black-box-testing [s]
   (let [result (conj (empty s) [1 2] [1 2] [1 3])]
     (cond
       (= 1 (count result)) :map
       (= 2 (count result)) :set
       (= [1 2] (first result)) :vector
       :else :list)))
+
+[(= :map (black-box-testing {:a 1, :b 2}))
+ (= :list (black-box-testing (range (rand-int 20))))
+ (= :vector (black-box-testing [1 2 3 4 5 6]))
+ (= :set (black-box-testing #{10 (rand-int 5)}))
+ (= [:map :set :vector :list] (map black-box-testing [{} #{} [] ()]))]
 ----
 
-=== 67. Prime Numbers
-[source, clojure]
-----
-;; Write a function which returns the first x number of prime numbers.
-(= (__ 2) [2 3])
-(= (__ 5) [2 3 5 7 11])
-(= (last (__ 100)) 541)
+== 69. Merge with a Function
+Write a function which takes a function f and a variable number of maps. Your function should return a map that consists of the rest of the maps conj-ed onto the first. If a key occurs in more than one map, the mapping(s) from the latter (left-to-right) should be combined with the mapping in the result by calling (f val-in-result val-in-latter)
 
-(fn prime-numbers [n]
-  (take n
-    (filter #(.isProbablePrime (BigInteger/valueOf %) 10)
-            (range))))
+[source, klipse]
 ----
-
-=== 69. Merge with a Function
-[source, clojure]
-----
-;; Write a function which takes a function f and a variable number of maps. Your function should return a map that consists of the rest of the maps conj-ed onto the first. If a key occurs in more than one map, the mapping(s) from the latter (left-to-right) should be combined with the mapping in the result by calling (f val-in-result val-in-latter)
-(= (__ * {:a 2, :b 3, :c 4} {:a 2} {:b 2} {:c 5})
-   {:a 4, :b 6, :c 20})
-(= (__ - {1 10, 2 20} {1 3, 2 10, 3 15})
-   {1 7, 2 10, 3 15})
-(= (__ concat {:a [3], :b [6]} {:a [4 5], :c [8 9]} {:b [7]})
-   {:a [3 4 5], :b [6 7], :c [8 9]})
-
-(fn merge-with-a-function [f & m]
+(defn merge-with-a-function [f & m]
   (into {}
     (map (fn [e]
            (if (> (count (val e)) 1)
                [(key e) (reduce f (map second (val e)))]
                [(key e) (second (first (val e)))]))
       (group-by first (apply concat m)))))
+
+[(= (merge-with-a-function * {:a 2, :b 3, :c 4} {:a 2} {:b 2} {:c 5})
+    {:a 4, :b 6, :c 20})
+ (= (merge-with-a-function - {1 10, 2 20} {1 3, 2 10, 3 15})
+    {1 7, 2 10, 3 15})
+ (= (merge-with-a-function concat {:a [3], :b [6]} {:a [4 5], :c [8 9]} {:b [7]})
+    {:a [3 4 5], :b [6 7], :c [8 9]})]
 ----
 
-=== 70. Word Sorting
-[source, clojure]
-----
-;; Write a function that splits a sentence up into a sorted list of words. Capitalization should not affect sort order and punctuation should be ignored.
-(= (__  "Have a nice day.")
-   ["a" "day" "Have" "nice"])
-(= (__  "Clojure is a fun language!")
-   ["a" "Clojure" "fun" "is" "language"])
-(= (__  "Fools fall for foolish follies.")
-   ["fall" "follies" "foolish" "Fools" "for"])
+== 70. Word Sorting
+Write a function that splits a sentence up into a sorted list of words. Capitalization should not affect sort order and punctuation should be ignored.
 
-(fn word-sorting [s]
+[source, klipse]
+----
+(defn word-sorting [s]
   (into []
     (sort-by clojure.string/lower-case
       (clojure.string/split (apply str
                                    (take (dec (count s)) s))
                             #"\s"))))
+
+[(= (word-sorting  "Have a nice day.")
+    ["a" "day" "Have" "nice"])
+ (= (word-sorting "Clojure is a fun language!")
+    ["a" "Clojure" "fun" "is" "language"])
+ (= (word-sorting "Fools fall for foolish follies.")
+    ["fall" "follies" "foolish" "Fools" "for"])]
 ----
 
-=== 74. Filter Perfect Squares
-[source, clojure]
-----
-;; Given a string of comma separated integers, write a function which returns a new comma separated string that only contains the numbers which are perfect squares.
-(= (__ "4,5,6,7,8,9") "4,9")
-(= (__ "15,16,25,36,37") "16,25,36")
+== 74. Filter Perfect Squares
+Given a string of comma separated integers, write a function which returns a new comma separated string that only contains the numbers which are perfect squares.
 
-(fn filter-perfect-squares [s]
+[source, klipse]
+----
+(defn filter-perfect-squares [s]
   (letfn [(perfect-square? [n]
             (== (Math/sqrt n) (int (Math/sqrt n))))]
     (clojure.string/join ","
-    					(filter perfect-square?
-                                (map read-string (clojure.string/split s #","))))))
+                         (filter perfect-square?
+                                 (clojure.string/split s #",")))))
+
+[(= (filter-perfect-squares "4,5,6,7,8,9") "4,9")
+ (= (filter-perfect-squares "15,16,25,36,37") "16,25,36")]
 ----
 
-=== 75. Euler's Totient Function
-[source, clojure]
-----
-;; Two numbers are coprime if their greatest common divisor equals 1. Euler's totient function f(x) is defined as the number of positive integers less than x which are coprime to x. The special case f(1) equals 1. Write a function which calculates Euler's totient function.
-(= (__ 1) 1)
-(= (__ 10) (count '(1 3 7 9)) 4)
-(= (__ 40) 16)
-(= (__ 99) 60)
+== 75. Euler's Totient Function
+Two numbers are coprime if their greatest common divisor equals 1. Euler's totient function f(x) is defined as the number of positive integers less than x which are coprime to x. The special case f(1) equals 1. Write a function which calculates Euler's totient function.
 
-(fn eulers-totient-function [n]
+[source, klipse]
+----
+(defn eulers-totient-function [n]
   (letfn [(gcd [a b]
             (if (= b 0)
               a
               (recur b (mod a b))))]
   (count
     (filter #(= 1 (gcd n %)) (range n)))))
+
+[(= (eulers-totient-function 1) 1)
+ (= (eulers-totient-function 10) (count '(1 3 7 9)) 4)
+ (= (eulers-totient-function 40) 16)
+ (= (eulers-totient-function 99) 60)]
 ----
 
-=== 76. Intro to Trampoline
-[source, clojure]
-----
-;; The trampoline function takes a function f and a variable number of parameters. Trampoline calls f with any parameters that were supplied. If f returns a function, trampoline calls that function with no arguments. This is repeated, until the return value is not a function, and then trampoline returns that non-function value. This is useful for implementing mutually recursive algorithms in a way that won't consume the stack.
-(= __
-   (letfn
-     [(foo [x y] #(bar (conj x y) y))
-      (bar [x y] (if (> (last x) 10)
-                   x
-                   #(foo x (+ 2 y))))]
-     (trampoline foo [] 1)))
+== 76. Intro to Trampoline
+The trampoline function takes a function f and a variable number of parameters. Trampoline calls f with any parameters that were supplied. If f returns a function, trampoline calls that function with no arguments. This is repeated, until the return value is not a function, and then trampoline returns that non-function value. This is useful for implementing mutually recursive algorithms in a way that won't consume the stack.
 
-[1 3 5 7 9 11]
+[source, klipse]
+----
+(def intro-to-trampoline [1 3 5 7 9 11])
+
+[(= intro-to-trampoline
+    (letfn
+      [(foo [x y] #(bar (conj x y) y))
+       (bar [x y] (if (> (last x) 10)
+                    x
+                    #(foo x (+ 2 y))))]
+      (trampoline foo [] 1)))]
 ----
 
-=== 77. Anagram Finder
-[source, clojure]
-----
-;; Write a function which finds all the anagrams in a vector of words. A word x is an anagram of word y if all the letters in x can be rearranged in a different order to form y. Your function should return a set of sets, where each sub-set is a group of words which are anagrams of each other. Each sub-set should have at least two words. Words without any anagrams should not be included in the result.
-(= (__ ["meat" "mat" "team" "mate" "eat"])
-   #{#{"meat" "team" "mate"}})
-(= (__ ["veer" "lake" "item" "kale" "mite" "ever"])
-  #{#{"veer" "ever"} #{"lake" "kale"} #{"mite" "item"}})
+== 77. Anagram Finder
+Write a function which finds all the anagrams in a vector of words. A word x is an anagram of word y if all the letters in x can be rearranged in a different order to form y. Your function should return a set of sets, where each sub-set is a group of words which are anagrams of each other. Each sub-set should have at least two words. Words without any anagrams should not be included in the result.
 
-(fn anagram-finder [s]
+[source, klipse]
+----
+(defn anagram-finder [s]
   (->> (group-by sort s)
        (filter #(> (count (val %)) 1))
        (map #(set (val %)))
        (set)))
+
+[(= (anagram-finder ["meat" "mat" "team" "mate" "eat"])
+    #{#{"meat" "team" "mate"}})
+ (= (anagram-finder ["veer" "lake" "item" "kale" "mite" "ever"])
+   #{#{"veer" "ever"} #{"lake" "kale"} #{"mite" "item"}})]
 ----
 
-=== 78. Reimplement Trampoline
-[source, clojure]
-----
-;; Reimplement the function described in "Intro to Trampoline".
-(= (letfn [(triple [x] #(sub-two (* 3 x)))
-          (sub-two [x] #(stop?(- x 2)))
-          (stop? [x] (if (> x 50) x #(triple x)))]
-    (__ triple 2))
-  82)
-(= (letfn [(my-even? [x] (if (zero? x) true #(my-odd? (dec x))))
-          (my-odd? [x] (if (zero? x) false #(my-even? (dec x))))]
-    (map (partial __ my-even?) (range 6)))
-  [true false true false true false])
+== 78. Reimplement Trampoline
+Reimplement the function described in "Intro to Trampoline".
 
-(fn reimplement-trampoline
+[source, klipse]
+----
+(defn reimplement-trampoline
   ([f]
    (let [r (f)]
      (if (fn? r)
@@ -322,58 +308,67 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
        r)))
   ([f & args]
    (reimplement-trampoline #(apply f args))))
+
+[(= (letfn [(triple [x] #(sub-two (* 3 x)))
+           (sub-two [x] #(stop?(- x 2)))
+           (stop? [x] (if (> x 50) x #(triple x)))]
+     (reimplement-trampoline triple 2))
+   82)
+ (= (letfn [(my-even? [x] (if (zero? x) true #(my-odd? (dec x))))
+           (my-odd? [x] (if (zero? x) false #(my-even? (dec x))))]
+     (map (partial reimplement-trampoline my-even?) (range 6)))
+    [true false true false true false])]
 ----
 
-=== 80. Perfect Numbers
-[source, clojure]
-----
-;; A number is "perfect" if the sum of its divisors equal the number itself. 6 is a perfect number because 1+2+3=6. Write a function which returns true for perfect numbers and false otherwise.
-(= (__ 6) true)
-(= (__ 7) false)
-(= (__ 496) true)
-(= (__ 500) false)
-(= (__ 8128) true)
+== 80. Perfect Numbers
+A number is "perfect" if the sum of its divisors equal the number itself. 6 is a perfect number because 1+2+3=6. Write a function which returns true for perfect numbers and false otherwise.
 
-(fn perfect-numbers [n]
+[source, klipse]
+----
+(defn perfect-numbers [n]
   (= n
      (reduce +
              (filter #(zero? (mod n %))
                      (range 1 (inc (/ n 2)))))))
+
+[(= (perfect-numbers 6) true)
+ (= (perfect-numbers 7) false)
+ (= (perfect-numbers 496) true)
+ (= (perfect-numbers 500) false)
+ (= (perfect-numbers 8128) true)]
 ----
 
-=== 85. Power Set
-[source, clojure]
-----
-;; Write a function which generates the power set of a given set. The power set of a set x is the set of all subsets of x, including the empty set and x itself.
-(= (__ #{1 :a}) #{#{1 :a} #{:a} #{} #{1}})
-(= (__ #{}) #{#{}})
-(= (__ #{1 2 3})
-   #{#{} #{1} #{2} #{3} #{1 2} #{1 3} #{2 3} #{1 2 3}})
-(= (count (__ (into #{} (range 10)))) 1024)
+== 85. Power Set
+Write a function which generates the power set of a given set. The power set of a set x is the set of all subsets of x, including the empty set and x itself.
 
-(fn power-set [s]
+[source, klipse]
+----
+(require 'clojure.set)
+(defn power-set [s]
    (reduce (fn [result next]
              (clojure.set/union result
                                 (map #(conj % next)
                                      result)))
            #{#{}}
            s))
+
+[(= (power-set #{1 :a}) #{#{1 :a} #{:a} #{} #{1}})
+ (= (power-set #{}) #{#{}})
+ (= (power-set #{1 2 3})
+    #{#{} #{1} #{2} #{3} #{1 2} #{1 3} #{2 3} #{1 2 3}})
+ (= (count (power-set (into #{} (range 10)))) 1024)]
 ----
 
-=== 86. Happy numbers
-[source, clojure]
-----
-;; Happy numbers are positive integers that follow a particular formula: take each individual digit, square it, and then sum the squares to get a new number. Repeat with the new number and eventually, you might get to a number whose squared sum is 1. This is a happy number. An unhappy number (or sad number) is one that loops endlessly. Write a function that determines if a number is happy or not.
-(= (__ 7) true)
-(= (__ 986543210) true)
-(= (__ 2) false)
-(= (__ 3) false)
+== 86. Happy numbers
+Happy numbers are positive integers that follow a particular formula: take each individual digit, square it, and then sum the squares to get a new number. Repeat with the new number and eventually, you might get to a number whose squared sum is 1. This is a happy number. An unhappy number (or sad number) is one that loops endlessly. Write a function that determines if a number is happy or not.
 
-(fn happy-numbers [x]
+[source, klipse]
+----
+(defn happy-numbers [x]
   {:pre [(pos? x)]}
   (letfn [(sum-of-square-digits [n]
             (->> (str n)
-                 (map #(Character/digit % 10))
+                 (map js/parseInt)
                  (map #(* % %))
                  (reduce +)))]
   (loop [r #{}
@@ -383,58 +378,62 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
         (= s 1) true
         (contains? r s) false
         :else (recur (conj r s) s))))))
+
+[(= (happy-numbers 7) true)
+ (= (happy-numbers 986543210) true)
+ (= (happy-numbers 2) false)
+ (= (happy-numbers 3) false)]
 ----
 
-=== 93. Partially Flatten a Sequence
-[source, clojure]
-----
-;; Write a function which flattens any nested combination of sequential things (lists, vectors, etc.), but maintains the lowest level sequential items. The result should be a sequence of sequences with only one level of nesting.
-(= (__ [["Do"] ["Nothing"]])
-   [["Do"] ["Nothing"]])
-(= (__ [[[[:a :b]]] [[:c :d]] [:e :f]])
-   [[:a :b] [:c :d] [:e :f]])
-(= (__ '((1 2)((3 4)((((5 6)))))))
-   '((1 2)(3 4)(5 6)))
+== 93. Partially Flatten a Sequence
+Write a function which flattens any nested combination of sequential things (lists, vectors, etc.), but maintains the lowest level sequential items. The result should be a sequence of sequences with only one level of nesting.
 
-(fn partially-flatten-a-sequence [s]
+[source, klipse]
+----
+(defn partially-flatten-a-sequence [s]
   (reduce (fn [result x]
             (concat result
                     (if (every? #(not (coll? %)) x)
                       (vector x)
                       (partially-flatten-a-sequence x))))
           [] s))
+
+[(= (partially-flatten-a-sequence [["Do"] ["Nothing"]])
+    [["Do"] ["Nothing"]])
+ (= (partially-flatten-a-sequence [[[[:a :b]]] [[:c :d]] [:e :f]])
+    [[:a :b] [:c :d] [:e :f]])
+ (= (partially-flatten-a-sequence '((1 2)((3 4)((((5 6)))))))
+    '((1 2)(3 4)(5 6)))]
 ----
 
-=== 98. Equivalence Classes
-[source, clojure]
-----
-;; A function f defined on a domain D induces an equivalence relation on D, as follows: a is equivalent to b with respect to f if and only if (f a) is equal to (f b). Write a function with arguments f and D that computes the equivalence classes of D with respect to f.
-(= (__ #(* % %) #{-2 -1 0 1 2})
-   #{#{0} #{1 -1} #{2 -2}})
-(= (__ #(rem % 3) #{0 1 2 3 4 5 })
-   #{#{0 3} #{1 4} #{2 5}})
-(= (__ identity #{0 1 2 3 4})
-   #{#{0} #{1} #{2} #{3} #{4}})
-(= (__ (constantly true) #{0 1 2 3 4})
-   #{#{0 1 2 3 4}})
+== 98. Equivalence Classes
+A function f defined on a domain D induces an equivalence relation on D, as follows: a is equivalent to b with respect to f if and only if (f a) is equal to (f b). Write a function with arguments f and D that computes the equivalence classes of D with respect to f.
 
-(fn equivalence-classes [f d]
+[source, klipse]
+----
+(defn equivalence-classes [f d]
   (set
     (map #(set (map first %))
          (vals
            (group-by second
                      (map #(list % (f %)) d))))))
+
+[(= (equivalence-classes #(* % %) #{-2 -1 0 1 2})
+    #{#{0} #{1 -1} #{2 -2}})
+ (= (equivalence-classes #(rem % 3) #{0 1 2 3 4 5 })
+    #{#{0 3} #{1 4} #{2 5}})
+ (= (equivalence-classes identity #{0 1 2 3 4})
+    #{#{0} #{1} #{2} #{3} #{4}})
+ (= (equivalence-classes (constantly true) #{0 1 2 3 4})
+    #{#{0 1 2 3 4}})]
 ----
 
-=== 102. intoCamelCase
-[source, clojure]
-----
-;; When working with java, you often need to create an object with fieldsLikeThis, but you'd rather work with a hashmap that has :keys-like-this until it's time to convert. Write a function which takes lower-case hyphen-separated strings and converts them to camel-case strings.
-(= (__ "something") "something")
-(= (__ "multi-word-key") "multiWordKey")
-(= (__ "leaveMeAlone") "leaveMeAlone")
+== 102. intoCamelCase
+When working with java, you often need to create an object with fieldsLikeThis, but you'd rather work with a hashmap that has :keys-like-this until it's time to convert. Write a function which takes lower-case hyphen-separated strings and converts them to camel-case strings.
 
-(fn into-camel-case [s]
+[source, klipse]
+----
+(defn into-camel-case [s]
   (if-not (nil? (re-find #"-" s))
     (let [split (clojure.string/split s #"-")]
       (str
@@ -442,22 +441,18 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
         (clojure.string/join
           (map clojure.string/capitalize (rest split)))))
     s))
+
+[(= (into-camel-case "something") "something")
+ (= (into-camel-case "multi-word-key") "multiWordKey")
+ (= (into-camel-case "leaveMeAlone") "leaveMeAlone")]
 ----
 
-=== 103. Generating k-combinations
-[source, clojure]
-----
-;; Given a sequence S consisting of n elements generate all k-combinations of S, i. e. generate all possible sets consisting of k distinct elements taken from S. The number of k-combinations for a sequence is equal to the binomial coefficient.
-(= (__ 1 #{4 5 6}) #{#{4} #{5} #{6}})
-(= (__ 10 #{4 5 6}) #{})
-(= (__ 2 #{0 1 2}) #{#{0 1} #{0 2} #{1 2}})
-(= (__ 3 #{0 1 2 3 4}) #{#{0 1 2} #{0 1 3} #{0 1 4} #{0 2 3} #{0 2 4}
-                         #{0 3 4} #{1 2 3} #{1 2 4} #{1 3 4} #{2 3 4}})
-(= (__ 4 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a "abc" "efg"}})
-(= (__ 2 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a} #{[1 2 3] "abc"} #{[1 2 3] "efg"}
-                                    #{:a "abc"} #{:a "efg"} #{"abc" "efg"}})
+== 103. Generating k-combinations
+Given a sequence S consisting of n elements generate all k-combinations of S, i. e. generate all possible sets consisting of k distinct elements taken from S. The number of k-combinations for a sequence is equal to the binomial coefficient.
 
-(fn generating-k-combinations [k s]
+[source, klipse]
+----
+(defn generating-k-combinations [k s]
   (set
     (cond
       (> k (count s)) []
@@ -467,18 +462,23 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
                                    #{#{}}
                                    s)
                            (filter #(= k (count %)))))))
+
+[(= (generating-k-combinations 1 #{4 5 6}) #{#{4} #{5} #{6}})
+ (= (generating-k-combinations 10 #{4 5 6}) #{})
+ (= (generating-k-combinations 2 #{0 1 2}) #{#{0 1} #{0 2} #{1 2}})
+ (= (generating-k-combinations 3 #{0 1 2 3 4}) #{#{0 1 2} #{0 1 3} #{0 1 4} #{0 2 3} #{0 2 4}
+                                                 #{0 3 4} #{1 2 3} #{1 2 4} #{1 3 4} #{2 3 4}})
+ (= (generating-k-combinations 4 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a "abc" "efg"}})
+ (= (generating-k-combinations 2 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a} #{[1 2 3] "abc"} #{[1 2 3] "efg"}
+                                                            #{:a "abc"} #{:a "efg"} #{"abc" "efg"}})]
 ----
 
-=== 105. Identify keys and values
-[source, clojure]
-----
-;; Given an input sequence of keywords and numbers, create a map such that each key in the map is a keyword, and the value is a sequence of all the numbers (if any) between it and the next keyword in the sequence.
-(= {} (__ []))
-(= {:a [1]} (__ [:a 1]))
-(= {:a [1], :b [2]} (__ [:a 1, :b 2]))
-(= {:a [1 2 3], :b [], :c [4]} (__ [:a 1 2 3 :b :c 4]))
+== 105. Identify keys and values
+Given an input sequence of keywords and numbers, create a map such that each key in the map is a keyword, and the value is a sequence of all the numbers (if any) between it and the next keyword in the sequence.
 
-(fn identify-keys-and-values [s]
+[source, klipse]
+----
+(defn identify-keys-and-values [s]
   (into {}
         (map #(vector (first %) (into [] (rest %)))
               (let [new (atom false)]
@@ -486,103 +486,86 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
                                  (reset! new (not @new))
                                  @new)
                               s)))))
+
+[(= {} (identify-keys-and-values []))
+ (= {:a [1]} (identify-keys-and-values [:a 1]))
+ (= {:a [1], :b [2]} (identify-keys-and-values [:a 1, :b 2]))
+ (= {:a [1 2 3], :b [], :c [4]} (identify-keys-and-values [:a 1 2 3 :b :c 4]))]
 ----
 
-=== 108. Lazy Searching
-[source, clojure]
-----
-;; Given any number of sequences, each sorted from smallest to largest, find the smallest single number which appears in all of the sequences. The sequences may be infinite, so be careful to search lazily.
-(= 3 (__ [3 4 5]))
-(= 4 (__ [1 2 3 4 5 6 7] [0.5 3/2 4 19]))
-(= 7 (__ (range) (range 0 100 7/6) [2 3 5 7 11 13]))
-(= 64 (__ (map #(* % % %) (range)) ;; perfect cubes
-          (filter #(zero? (bit-and % (dec %))) (range)) ;; powers of 2
-          (iterate inc 20))) ;; at least as large as 20
+== 110. Sequence of pronunciations
+Write a function that returns a lazy sequence of "pronunciations" of a sequence of numbers. A pronunciation of each element in the sequence consists of the number of repeating identical numbers and the number itself. For example, [1 1] is pronounced as [2 1] ("two ones"), which in turn is pronounced as [1 2 1 1] ("one two, one one"). Your function should accept an initial sequence of numbers, and return an infinite lazy sequence of pronunciations, each element being a pronunciation of the previous element.
 
-(fn lazy-searching [& sequences]
-  (if (apply = (map first sequences))
-    (ffirst sequences)
-    (let [sorted-sequences (sort-by first sequences)]
-      (apply lazy-search
-             (cons (rest (first sorted-sequences))
-                   (rest sorted-sequences))))))
+[source, klipse]
 ----
-
-=== 110. Sequence of pronunciations
-[source, clojure]
-----
-;; Write a function that returns a lazy sequence of "pronunciations" of a sequence of numbers. A pronunciation of each element in the sequence consists of the number of repeating identical numbers and the number itself. For example, [1 1] is pronounced as [2 1] ("two ones"), which in turn is pronounced as [1 2 1 1] ("one two, one one").
-;; Your function should accept an initial sequence of numbers, and return an infinite lazy sequence of pronunciations, each element being a pronunciation of the previous element.
-(= [[1 1] [2 1] [1 2 1 1]] (take 3 (__ [1])))
-(= [3 1 2 4] (first (__ [1 1 1 4 4])))
-(= [1 1 1 3 2 1 3 2 1 1] (nth (__ [1]) 6))
-(= 338 (count (nth (__ [3 2]) 15)))
-
-(fn sequence-of-pronounciations [s]
+(defn sequence-of-pronounciations [s]
   (let [n (flatten
             (map #(vector (count %) (first %))
                  (partition-by identity s)))]
     (lazy-seq
       (cons n (sequence-of-pronounciations n)))))
+
+[(= [[1 1] [2 1] [1 2 1 1]] (take 3 (sequence-of-pronounciations [1])))
+ (= [3 1 2 4] (first (sequence-of-pronounciations [1 1 1 4 4])))
+ (= [1 1 1 3 2 1 3 2 1 1] (nth (sequence-of-pronounciations [1]) 6))
+ (= 338 (count (nth (sequence-of-pronounciations [3 2]) 15)))]
 ----
 
-=== 114. Global take-while
-[source, clojure]
-----
-;; take-while is great for filtering sequences, but it limited: you can only examine a single item of the sequence at a time. What if you need to keep track of some state as you go over the sequence?
-;; Write a function which accepts an integer n, a predicate p, and a sequence. It should return a lazy sequence of items in the list up to, but not including, the nth item that satisfies the predicate.
-(= [2 3 5 7 11 13]
-   (__ 4 #(= 2 (mod % 3))
-         [2 3 5 7 11 13 17 19 23]))
-(= ["this" "is" "a" "sentence"]
-   (__ 3 #(some #{\i} %)
-         ["this" "is" "a" "sentence" "i" "wrote"]))
-(= ["this" "is"]
-   (__ 1 #{"a"}
-         ["this" "is" "a" "sentence" "i" "wrote"]))
+== 114. Global take-while
+`take-while` is great for filtering sequences, but it limited: you can only examine a single item of the sequence at a time. What if you need to keep track of some state as you go over the sequence? Write a function which accepts an integer n, a predicate p, and a sequence. It should return a lazy sequence of items in the list up to, but not including, the nth item that satisfies the predicate.
 
-(fn global-take-while [n p [x & xs]]
+[source, klipse]
+----
+(defn global-take-while [n p [x & xs]]
   (let [n-next (if (p x)
                  (dec n)
                  n)]
     (if (zero? n-next)
       '()
       (lazy-seq (cons x (global-take-while n-next p xs))))))
+
+[(= [2 3 5 7 11 13]
+    (global-take-while 4 #(= 2 (mod % 3))
+          [2 3 5 7 11 13 17 19 23]))
+ (= ["this" "is" "a" "sentence"]
+    (global-take-while 3 #(some #{\i} %)
+          ["this" "is" "a" "sentence" "i" "wrote"]))
+ (= ["this" "is"]
+    (global-take-while 1 #{"a"}
+          ["this" "is" "a" "sentence" "i" "wrote"]))]
 ----
 
-=== 115. The Balance of N
-[source, clojure]
-----
-;; A balanced number is one whose component digits have the same sum on the left and right halves of the number. Write a function which accepts an integer n, and returns true iff n is balanced.
-(= true (__ 11))
-(= true (__ 121))
-(= false (__ 123))
-(= true (__ 0))
-(= false (__ 88099))
-(= true (__ 89098))
-(= true (__ 89089))
-(= (take 20 (filter __ (range)))
-   [0 1 2 3 4 5 6 7 8 9 11 22 33 44 55 66 77 88 99 101])
+== 115. The Balance of N
+A balanced number is one whose component digits have the same sum on the left and right halves of the number. Write a function which accepts an integer n, and returns true iff n is balanced.
 
-(fn the-balance-of-n [n]
+[source, klipse]
+----
+(defn the-balance-of-n [n]
   (letfn [(sum [s]
-            (reduce + (map #(Character/getNumericValue %) s)))]
+            (reduce + (map js/parseInt s)))]
     (let [   s (.toString n)
           half (quot (count s) 2)]
       (=
         (sum (take half s))
         (sum (take-last half s))))))
+
+[(= true (the-balance-of-n 11))
+ (= true (the-balance-of-n 121))
+ (= false (the-balance-of-n 123))
+ (= true (the-balance-of-n 0))
+ (= false (the-balance-of-n 88099))
+ (= true (the-balance-of-n 89098))
+ (= true (the-balance-of-n 89089))
+ (= (take 20 (filter the-balance-of-n (range)))
+    [0 1 2 3 4 5 6 7 8 9 11 22 33 44 55 66 77 88 99 101])]
 ----
 
-=== 116. Prime Sandwich
-[source, clojure]
-----
-;; A balanced prime is a prime number which is also the mean of the primes directly before and after it in the sequence of valid primes. Create a function which takes an integer n, and returns true iff it is a balanced prime.
-(= false (__ 4))
-(= true (__ 563))
-(= 1103 (nth (filter __ (range)) 15))
+== 116. Prime Sandwich
+A balanced prime is a prime number which is also the mean of the primes directly before and after it in the sequence of valid primes. Create a function which takes an integer n, and returns true iff it is a balanced prime.
 
-(fn prime-sandwich? [n]
+[source, klipse]
+----
+(defn prime-sandwich? [n]
   (letfn [(prime? [n]
             (and
               (> n 1)
@@ -595,52 +578,46 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
             prime-before (last (butlast primes-before))
             prime-after (first (drop (count primes-before) primes))]
          (= n (/ (+ prime-before prime-after) 2))))))
+
+[(= false (prime-sandwich? 4))
+ (= true (prime-sandwich? 563))
+ (= 1103 (nth (filter prime-sandwich? (range)) 15))]
 ----
 
-=== 121. Universal Computation Engine
-[source, clojure]
-----
-;; Given a mathematical formula in prefix notation, return a function that calculates the value of the formula. The formula can contain nested calculations using the four basic mathematical operators, numeric constants, and symbols representing variables. The returned function has to accept a single parameter containing the map of variable names to their values.
-(= 2 ((__ '(/ a b))
-      '{b 8 a 16}))
-(= 8 ((__ '(+ a b 2))
-      '{a 2 b 4}))
-(= [6 0 -4]
-     (map (__ '(* (+ 2 a)
-                  (- 10 b)))
-            '[{a 1 b 8}
-              {b 5 a -2}
-              {a 2 b 11}]))
-(= 1 ((__ '(/ (+ x 2)
-              (* 3 (+ y 1))))
-      '{x 4 y 1}))
+== 121. Universal Computation Engine
+Given a mathematical formula in prefix notation, return a function that calculates the value of the formula. The formula can contain nested calculations using the four basic mathematical operators, numeric constants, and symbols representing variables. The returned function has to accept a single parameter containing the map of variable names to their values.
 
-(fn universal-computation-engine [formula]
+[source, klipse]
+----
+(defn universal-computation-engine [formula]
   (fn [parameters]
     (letfn [(evaluate [x]
               (cond
                 (seq? x) (apply ({'/ / '+ + '- - '* *} (first x)) (map evaluate (rest x)))
                 (number? x) x))]
       (evaluate (clojure.walk/prewalk-replace parameters formula)))))
+
+[(= 2 ((universal-computation-engine '(/ a b))
+                                     '{b 8 a 16}))
+ (= 8 ((universal-computation-engine '(+ a b 2))
+                                     '{a 2 b 4}))
+ (= [6 0 -4]
+      (map (universal-computation-engine '(* (+ 2 a)
+                   (- 10 b)))
+             '[{a 1 b 8}
+               {b 5 a -2}
+               {a 2 b 11}]))
+ (= 1 ((universal-computation-engine '(/ (+ x 2)
+               (* 3 (+ y 1))))
+       '{x 4 y 1}))]
 ----
 
-=== 132. Insert between two items
-[source, clojure]
-----
-;; Write a function that takes a two-argument predicate, a value, and a collection; and returns a new collection where the value is inserted between every two items that satisfy the predicate.
-(= '(1 :less 6 :less 7 4 3) (__ < :less [1 6 7 4 3]))
-(= '(2) (__ > :more [2]))
-(= [0 1 :x 2 :x 3 :x 4]  (__ #(and (pos? %) (< % %2)) :x (range 5)))
-(empty? (__ > :more ()))
-(= [0 1 :same 1 2 3 :same 5 8 13 :same 21]
-   (take 12 (->> [0 1]
-                 (iterate (fn [[a b]] [b (+ a b)]))
-                 (map first) ; fibonacci numbers
-                 (__ (fn [a b] ; both even or both odd
-                       (= (mod a 2) (mod b 2)))
-                     :same))))
+== 132. Insert between two items
+Write a function that takes a two-argument predicate, a value, and a collection; and returns a new collection where the value is inserted between every two items that satisfy the predicate.
 
-(fn insert-between-two-items [p v s]
+[source, klipse]
+----
+(defn insert-between-two-items [p v s]
   (if (empty? s)
     []
     (flatten
@@ -649,19 +626,26 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
                      (vector v (second %))
                      (second %))
                    (partition 2 1 s))))))
+
+[(= '(1 :less 6 :less 7 4 3) (insert-between-two-items < :less [1 6 7 4 3]))
+ (= '(2) (insert-between-two-items > :more [2]))
+ (= [0 1 :x 2 :x 3 :x 4]  (insert-between-two-items #(and (pos? %) (< % %2)) :x (range 5)))
+ (empty? (insert-between-two-items > :more ()))
+ (= [0 1 :same 1 2 3 :same 5 8 13 :same 21]
+    (take 12 (->> [0 1]
+                  (iterate (fn [[a b]] [b (+ a b)]))
+                  (map first) ; fibonacci numbers
+                  (insert-between-two-items (fn [a b] ; both even or both odd
+                                              (= (mod a 2) (mod b 2)))
+                                              :same))))]
 ----
 
-=== 137. Digits and bases
-[source, clojure]
-----
-;; Write a function which returns a sequence of digits of a non-negative number (first argument) in numerical system with an arbitrary base (second argument). Digits should be represented with their integer values, e.g. 15 would be [1 5] in base 10, [1 1 1 1] in base 2 and [15] in base 16.
-(= [1 2 3 4 5 0 1] (__ 1234501 10))
-(= [0] (__ 0 11))
-(= [1 0 0 1] (__ 9 2))
-(= [1 0] (let [n (rand-int 100000)](__ n n)))
-(= [16 18 5 24 15 1] (__ Integer/MAX_VALUE 42))
+== 137. Digits and bases
+Write a function which returns a sequence of digits of a non-negative number (first argument) in numerical system with an arbitrary base (second argument). Digits should be represented with their integer values, e.g. 15 would be [1 5] in base 10, [1 1 1 1] in base 2 and [15] in base 16.
 
-(fn digits-and-bases [n base]
+[source, klipse]
+----
+(defn digits-and-bases [n base]
   {:pre [(>= n 0)]}
   (letfn [(step [r n base]
             (if (zero? n)
@@ -672,37 +656,33 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
     (if (zero? n)
       '(0)
       (step '() n base))))
+
+[(= [1 2 3 4 5 0 1] (digits-and-bases 1234501 10))
+ (= [0] (digits-and-bases 0 11))
+ (= [1 0 0 1] (digits-and-bases 9 2))
+ (= [1 0] (let [n (rand-int 100000)](digits-and-bases n n)))
+ (= [16 18 5 24 15 1] (digits-and-bases 2147483647 42))]
 ----
 
-=== 144. Oscilrate
-[source, clojure]
-----
-;; Write an oscillating iterate: a function that takes an initial value and a variable number of functions. It should return a lazy sequence of the functions applied to the value in order, restarting from the first function after it hits the end.
-(= (take 3 (__ 3.14 int double)) [3.14 3 3.0])
-(= (take 5 (__ 3 #(- % 3) #(+ 5 %))) [3 0 5 2 7])
-(= (take 12 (__ 0 inc dec inc dec inc)) [0 1 0 1 0 1 2 1 2 1 2 3])
+== 144. Oscilrate
+Write an oscillating iterate: a function that takes an initial value and a variable number of functions. It should return a lazy sequence of the functions applied to the value in order, restarting from the first function after it hits the end.
 
-(fn oscilrate [v & fs]
+[source, klipse]
+----
+(defn oscilrate [v & fs]
   (reductions (fn [v f] (f v)) v (cycle fs)))
+
+[(= (take 3 (oscilrate 3.14 int double)) [3.14 3 3.0])
+ (= (take 5 (oscilrate 3 #(- % 3) #(+ 5 %))) [3 0 5 2 7])
+ (= (take 12 (oscilrate 0 inc dec inc dec inc)) [0 1 0 1 0 1 2 1 2 1 2 3])]
 ----
 
-=== 148. The Big Divide
-[source, clojure]
-----
-;; Write a function which calculates the sum of all natural numbers under n (first argument) which are evenly divisible by at least one of a and b (second and third argument). Numbers a and b are guaranteed to be coprimes.
-;; Note: Some test cases have a very large n, so the most obvious solution will exceed the time limit.
-(= 0 (__ 3 17 11)
-(= 23 (__ 10 3 5)
-(= 233168 (__ 1000 3 5)
-(= "2333333316666668" (str (__ 100000000 3 5))
-(= "110389610389889610389610"
-  (str (__ (* 10000 10000 10000) 7 11))
-(= "1277732511922987429116"
-  (str (__ (* 10000 10000 10000) 757 809))
-(= "4530161696788274281"
-  (str (__ (* 10000 10000 1000) 1597 3571)))
+== 148. The Big Divide
+Write a function which calculates the sum of all natural numbers under n (first argument) which are evenly divisible by at least one of a and b (second and third argument). Numbers a and b are guaranteed to be coprimes. Note: Some test cases have a very large n, so the most obvious solution will exceed the time limit.
 
-(fn the-big-divide [n a b]
+[source, klipse]
+----
+(defn the-big-divide [n a b]
   (letfn [(cnt [x]
             (quot (dec n) x))
           (sum [x]
@@ -712,48 +692,61 @@ This is the third post on solutions to http://www.4clojure.com[4clojure] problem
         (sum a)
         (sum b))
       (sum (* a b)))))
+
+[(= 0 (the-big-divide 3 17 11))
+ (= 23 (the-big-divide 10 3 5))
+ (= 233168 (the-big-divide 1000 3 5))
+ (= "2333333316666668" (str (the-big-divide 100000000 3 5)))
+ (= "110389610389889610389610"
+    (str (the-big-divide (* 10000 10000 10000) 7 11)))
+ (= "1277732511922987429116"
+    (str (the-big-divide (* 10000 10000 10000) 757 809)))
+ (= "4530161696788274281"
+    (str (the-big-divide (* 10000 10000 1000) 1597 3571))))]
 ----
 
-=== 158. Decurry
-[source, clojure]
-----
-;; Write a function that accepts a curried function of unknown arity n. Return an equivalent function of n arguments.
-(= 10 ((__ (fn [a]
-             (fn [b]
-               (fn [c]
-                 (fn [d]
-                   (+ a b c d))))))
-       1 2 3 4))
-(= 24 ((__ (fn [a]
-            (fn [b]
-              (fn [c]
-                (fn [d]
-                  (* a b c d))))))
-      1 2 3 4))
-(= 25 ((__ (fn [a]
-             (fn [b]
-               (* a b))))
-       5 5))
+== 158. Decurry
+Write a function that accepts a curried function of unknown arity n. Return an equivalent function of n arguments.
 
-(fn decurry [f]
+[source, klipse]
+----
+(defn decurry [f]
   (fn [& args]
     (reduce #(%1 %2) f args)))
+
+[(= 10 ((decurry (fn [a]
+                   (fn [b]
+                     (fn [c]
+                       (fn [d]
+                         (+ a b c d))))))
+          1 2 3 4))
+ (= 24 ((decurry (fn [a]
+                   (fn [b]
+                     (fn [c]
+                       (fn [d]
+                         (* a b c d))))))
+         1 2 3 4))
+ (= 25 ((decurry (fn [a]
+                   (fn [b]
+                     (* a b))))
+          5 5))]
 ----
 
-=== 171. Intervals
-[source, clojure]
-----
-;; Write a function that takes a sequence of integers and returns a sequence of "intervals". Each interval is a a vector of two integers, start and end, such that all integers between start and end (inclusive) are contained in the input sequence.
-(= (__ [1 2 3]) [[1 3]])
-(= (__ [10 9 8 1 2 3]) [[1 3] [8 10]])
-(= (__ [1 1 1 1 1 1 1]) [[1 1]])
-(= (__ []) [])
-(= (__ [19 4 17 1 3 10 2 13 13 2 16 4 2 15 13 9 6 14 2 11])
-       [[1 4] [6 6] [9 11] [13 17] [19 19]])
+== 171. Intervals
+Write a function that takes a sequence of integers and returns a sequence of "intervals". Each interval is a a vector of two integers, start and end, such that all integers between start and end (inclusive) are contained in the input sequence.
 
-(fn intervals [s]
+[source, klipse]
+----
+(defn intervals [s]
   (vec
     (map #(vec [(first %) (last %)])
          (map #(map last %)
               (partition-by #(apply - %) (map-indexed vector (sort (distinct s))))))))
+
+[(= (intervals [1 2 3]) [[1 3]])
+ (= (intervals [10 9 8 1 2 3]) [[1 3] [8 10]])
+ (= (intervals [1 1 1 1 1 1 1]) [[1 1]])
+ (= (intervals []) [])
+ (= (intervals [19 4 17 1 3 10 2 13 13 2 16 4 2 15 13 9 6 14 2 11])
+               [[1 4] [6 6] [9 11] [13 17] [19 19]])]
 ----

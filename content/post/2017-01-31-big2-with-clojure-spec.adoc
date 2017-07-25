@@ -1,0 +1,372 @@
++++
+title = "Modelling Big two using clojure.spec and multimethods"
+date = "2017-02-28"
+categories = ["clojure"]
+keywords = ["clojure"]
+draft = true
++++
+
+In this post we will use the card game https://en.wikipedia.org/wiki/Big_two[Big two] as an exercise for exploring https://clojure.org/about/spec[clojure.spec]. If you are not familiar with the game here's a high level description so you can follow with the post:
+
+* Players get 13 cards each
+* They take turns putting cards down as hands
+* Valid hands are the typical poker hands (with some slight deviations)
+* A player can either pass or put down a stronger hand than the last one
+* The hand has to be of the same type. For example, a five card hand is followed by another five card hand
+* When all players pass, the player that put down the last hand gets to decide what type of hand to start with in the next round
+* The first player to get rid of all his cards wins
+
+First let's define two vectors which represent the possible `ranks` and `suits` of a card:
+
+[source, klipse]
+----
+(def ranks [:2 :1 :k :q :j :10 :9 :8 :7 :6 :5 :4 :3])
+(def suits [:s :h :c :d])
+----
+
+In this game `2` is the strongest card. The suit rank also matters i.e. spades is stronger than hearts etc.. So we store the values in vectors left to right from strongest to weakest. Based on this, we can write functions to compare 2 ranks or 2 suits:
+
+[source, klipse]
+----
+(defn stronger-rank? [r1 r2]
+  (= r1 (first (filter #{r1 r2} ranks))))
+
+(defn stronger-suit? [s1 s2]
+  (= s1 (first (filter #{s1 s2} suits))))
+
+[(stronger-rank? :2 :6)
+ (stronger-rank? :5 :k)
+ (stronger-suit? :s :d)
+ (stronger-suit? :d :h)]
+----
+
+We can represent a card using a value from each vector of ranks and suits. For example `[:2 :d]` represents the 2 of diamonds. We can describe this precisely with clojure.spec:
+[source, klipse]
+----
+(require '[clojure.spec :as s])
+
+(s/def ::card (s/tuple (set ranks) (set suits)))
+----
+
+Using this spec we can check whether something represents a valid card using `s/valid?`:
+
+[source, klipse]
+----
+[(s/valid? ::card [:2 :d])
+ (s/valid? ::card [:5 :c])
+ (s/valid? ::card [:15 :s])
+ (s/valid? ::card [:d :2])]
+----
+
+If `s/valid` returns `false` we can check why using `s/explain`:
+
+[source, klipse]
+----
+(s/explain ::card [:15 :s])
+----
+
+or `s/explain-data`:
+
+[source, klipse]
+----
+(s/explain-data ::card [:15 :s])
+----
+
+Now let's describe the different possible hands. We can start by defining a `hand` as a collection of distinct cards:
+
+[source, klipse]
+----
+(s/def ::hand (s/coll-of ::card :distinct true))
+
+[(s/valid? ::hand #{[:2 :h][:3 :d]})
+ (s/valid? ::hand #{[:2 :h][:2 :g]})]
+----
+
+The simplest `valid hand` is a single card:
+
+[source, klipse]
+----
+(s/def ::single-card (s/coll-of ::card :count 1))
+
+[(s/valid? ::single-card #{[:5 :s]})
+ (s/valid? ::single-card #{[:5 :s][:5 :h]})]
+----
+
+Another valid hand is a `pair`, i.e. any two cards with the same rank:
+
+[source, klipse]
+----
+(s/def ::pair (s/and (s/coll-of ::card :count 2 :distinct true)
+                     #(= 1 (count (group-by first %)))))
+
+(s/valid? ::pair #{[:5 :s][:5 :h]})
+----
+
+`Three of a kind` is similar:
+[source, klipse]
+----
+(s/def ::three-of-a-kind (s/and (s/coll-of ::card :count 3 :distinct true)
+                                #(= 1 (count (group-by first %)))))
+
+[(s/valid? ::three-of-a-kind #{[:7 :d][:7 :s][:7 :h]})
+ (s/valid? ::three-of-a-kind #{[:7 :d][:5 :s][:2 :h]})]
+----
+
+Now let's move on to the five card hands starting with the straight i.e. 5 distinct cards in consecutive order:
+
+[source, klipse]
+----
+(s/def ::five-cards (s/coll-of ::card :count 5 :distinct true))
+
+(def straight-ranks [#{:j :q :k :1 :2}
+                     #{:1 :2 :3 :4 :5}
+                     #{:2 :3 :4 :5 :6}
+                     #{:10 :j :q :k :1}
+                     #{:9 :10 :j :q :k}
+                     #{:8 :9 :10 :j :q}
+                     #{:7 :8 :9 :10 :j}
+                     #{:6 :7 :8 :9 :10}
+                     #{:5 :6 :7 :8 :9}
+                     #{:4 :5 :6 :7 :8}
+                     #{:3 :4 :5 :6 :7}])
+
+(def straight? (set straight-ranks))
+
+(s/def ::straight (s/and ::five-cards
+                         #(straight? (set (map first %)))))
+
+[(s/valid? ::straight #{[:9 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})
+ (s/valid? ::straight #{[:3 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})
+ (s/valid? ::straight #{[:9 :s] [:7 :d] [:8 :s]})]
+----
+
+For the remaining five card hands:
+
+[source, klipse]
+----
+(s/def ::flush (s/and ::five-cards
+                      #(= 1 (count (group-by second %)))))
+
+(s/def ::full-house (s/and ::five-cards
+                           #(= #{3 2} (set (map (fn [rank] (count rank))
+                                                (vals (group-by first %)))))))
+
+(s/def ::poker (s/and ::five-cards
+                      #(= #{4 1} (set (map (fn [rank] (count rank))
+                                           (vals (group-by first %)))))))
+
+(s/def ::straight-flush (s/and ::straight
+                               ::flush))
+
+[(s/valid? ::flush #{[:3 :s] [:6 :s] [:1 :s] [:j :s] [:10 :s]})
+ (s/valid? ::flush #{[:9 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})
+ (s/valid? ::full-house #{[:9 :s] [:9 :d] [:8 :s] [:8 :h] [:8 :c]})
+ (s/valid? ::full-house #{[:9 :s] [:9 :d] [:8 :s] [:j :h] [:10 :c]})
+ (s/valid? ::poker #{[:9 :s] [:9 :d] [:9 :c] [:9 :h] [:10 :c]})
+ (s/valid? ::poker #{[:9 :s] [:9 :d] [:9 :c] [:j :h] [:10 :c]})
+ (s/valid? ::straight-flush #{[:9 :s] [:7 :s] [:8 :s] [:j :s] [:10 :s]})
+ (s/valid? ::straight-flush #{[:9 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})]
+----
+
+Building on the specs above we can write the following specs:
+
+[source, klipse]
+----
+(s/def ::five-card-hand (s/or ::straight-flush ::straight-flush
+                              ::poker          ::poker
+                              ::full-house     ::full-house
+                              ::flush          ::flush
+                              ::straight       ::straight))
+
+(s/def ::valid-hand (s/or ::single-card     ::single-card
+                          ::pair            ::pair
+                          ::three-of-a-kind ::three-of-a-kind
+                          ::straight-flush  ::straight-flush
+                          ::poker           ::poker
+                          ::full-house      ::full-house
+                          ::flush           ::flush
+                          ::straight        ::straight))
+----
+
+
+
+If we establish parent-child relationships between these specs:
+
+[source, klipse]
+----
+(derive ::single-card     ::valid-hand)
+(derive ::pair            ::valid-hand)
+(derive ::three-of-a-kind ::valid-hand)
+(derive ::five-card-hand  ::valid-hand)
+
+(derive ::straight       ::five-card-hand)
+(derive ::flush          ::five-card-hand)
+(derive ::full-house     ::five-card-hand)
+(derive ::poker          ::five-card-hand)
+(derive ::straight-flush ::five-card-hand)
+----
+
+we can combine this with a multimethod that will return true if the first hand will beat the second one:
+
+[source, klipse]
+----
+(defmulti beats-hand?
+  (fn [hand-1 hand-2]
+    (let [type-1 (s/conform ::valid-hand hand-1)
+          type-2 (s/conform ::valid-hand hand-2)]
+      (if-not ((set [type-1 type-2]) :clojure.spec/invalid)
+        [(first type-1) (first type-2)]))))
+----
+
+The dispatching function uses `s/conform` to determine the type of hand and call an appropriate handler. So for two single cards we define a handler like this:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::single-card ::single-card]
+  [hand-1 hand-2]
+  (let [[rank-1 suit-1] (first hand-1)
+        [rank-2 suit-2] (first hand-2)]
+    (if (= rank-1 rank-2)
+      (stronger-suit? suit-1 suit-2)
+      (stronger-rank? rank-1 rank-2))))
+
+[(beats-hand? #{[:2 :s]} #{[:k :d]})
+ (beats-hand? #{[:2 :h]} #{[:2 :s]})]
+----
+
+For two pairs:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::pair ::pair]
+  [hand-1 hand-2]
+  (let [[rank-1 suit-1] (first hand-1)
+        [     _ suit-2] (second hand-1)
+        [rank-3 suit-3] (first hand-2)]
+    (if (= rank-1 rank-3)
+      (contains? #{suit-1 suit-2} :s)
+      (stronger-rank? rank-1 rank-3))))
+
+[(beats-hand? #{[:2 :h][:2 :d]} #{[:1 :s][:1 :c]})
+ (beats-hand? #{[:7 :s][:7 :c]} #{[:9 :h][:9 :d]})]
+----
+
+For three of a kind:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::three-of-a-kind ::three-of-a-kind]
+  [hand-1 hand-2]
+  (let [[rank-1] (first hand-1)
+        [rank-2] (first hand-2)]
+    (stronger-rank? rank-1 rank-2)))
+
+[(beats-hand? #{[:2 :h][:2 :d][:2 :s]} #{[:1 :s][:1 :c][:1 :h]})
+ (beats-hand? #{[:7 :s][:7 :c][:7 :h]} #{[:9 :h][:9 :d][:9 :s]})]
+----
+
+Straight:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::straight ::straight]
+  [straight-1 straight-2]
+  (let [rank-1 (set (map first straight-1))
+        rank-2 (set (map first straight-2))]
+    (if (= rank-1 rank-2)
+      (let [rank (straight-highest-card rank-1)
+            suit-1 (some #(when (= rank (first %)) (second %)) straight-1)
+            suit-2 (some #(when (= rank (first %)) (second %)) straight-2)]
+        (stronger-suit? suit-1 suit-2))
+      (stronger-straight-rank? rank-1 rank-2))))
+----
+
+Flush:
+
+[source, klipse]
+----
+(defn flush-rank [flush]
+  (first (filter (set (map first flush)) ranks)))
+
+(defmethod beats-hand? [::flush ::flush]
+  [flush-1 flush-2]
+  (let [rank-1 (flush-rank flush-1)
+        suit-1 (second (first flush-1))
+        rank-2 (flush-rank flush-2)
+        suit-2 (second (first flush-2))]
+    (if (= rank-1 rank-2)
+      (stronger-suit? suit-1 suit-2)
+      (stronger-rank? rank-1 rank-2))))
+
+[(beats-hand? #{[:3 :h][:7 :h][:2 :h][:8 :h][:5 :h]} #{[:3 :d][:7 :d][:2 :d][:8 :d][:5 :d]})
+ (beats-hand? #{[:3 :h][:7 :h][:1 :h][:8 :h][:5 :h]} #{[:3 :d][:7 :d][:2 :d][:8 :d][:5 :d]})]
+----
+
+Full-house:
+
+[source, klipse]
+----
+(defn full-house-rank [full-house]
+  (first (last (sort-by #(count (val %))
+                        (group-by first full-house)))))
+
+(defmethod beats-hand? [::full-house ::full-house]
+  [full-house-1 full-house-2]
+  (let [rank-1 (full-house-rank full-house-1)
+        rank-2 (full-house-rank full-house-2)]
+    (stronger-rank? rank-1 rank-2)))
+----
+
+Straight-flush:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::straight-flush ::straight-flush]
+  [straight-flush-1 straight-flush-2]
+  (let [suit-1 (second (first straight-flush-1))
+        suit-2 (second (first straight-flush-2))
+        rank-1 (set (map first straight-flush-1))
+        rank-2 (set (map first straight-flush-2))]
+    (if (= rank-1 rank-2)
+      (stronger-suit? suit-1 suit-2)
+      (stronger-straight-rank? rank-1 rank-2))))
+----
+
+Poker:
+
+[source, klipse]
+----
+(defn poker-rank [poker-hand]
+  (first (last (sort-by #(count (val %))
+                        (group-by first poker-hand)))))
+
+(defmethod beats-hand? [::poker ::poker]
+  [poker-1 poker-2]
+  (let [r1 (poker-rank poker-1)
+        r2 (poker-rank poker-2)]
+    (= r1 (first (filter #{r1 r2} ranks)))))
+----
+
+One more handler is required to be able to compare five card hands of different types:
+
+[source, klipse]
+----
+(def five-card-hand-rank [::straight-flush ::poker ::full-house ::flush ::straight])
+
+(defmethod beats-hand? [::five-card-hand ::five-card-hand]
+  [hand-1 hand-2]
+  (let [type-1 (first (s/conform ::five-card-hand hand-1))
+        type-2 (first (s/conform ::five-card-hand hand-2))]
+    (= type-1 (first (filter #{type-1 type-2} five-card-hand-rank)))))
+----
+
+What if the hands are not compatible? This is handled using the default handler which returns `false`:
+
+[source, klipse]
+----
+(defmethod beats-hand? :default
+  [_ _]
+  false)
+
+(beats-hand? #{[:2 :d] [:2 :s]} #{[:3 :h]})
+----

@@ -1,0 +1,159 @@
++++
+title = "The Template Method Pattern"
+date = "2016-09-15"
+categories = ["design-patterns", "java", "scala", "kotlin", "clojure"]
+keywords = ["template method", "introduction", "tutorial", "design pattern", "scala", "java", "kotlin", "clojure"]
++++
+
+:source-highlighter: pygments
+
+The `Template Method` pattern is a `behavioral design pattern` commonly used when a number of algorithms have a common skeleton but they vary in the specifics of the steps. In this article, we will write implementations for a simple example in Java, Scala, Kotlin and Clojure.
+
+As an example consider arithmetic and geometric progressions in mathematics. stem:[3, 5, 7, 9, 11...] is an example of an arithmetic progression which has the generic form: stem:[a, a+f, a+2f, a+3f...] with stem:[a=3, f=2]. An example of a geometric progression is stem:[3, 6, 12, 24, 48...] which has the generic form of: stem:[a, af, af^2, af^3...] with stem:[a=3, f=2]. Now say we have the task of writing stem:[n] values from a progression to stdout. We could implement this as follows:
+
+[source, java]
+----
+class ArithmeticProgression {
+  void output(int a, int f, int c) {
+    for (int n = 1; n <= c; n++) {
+      System.out.println(a + (n - 1) * f);
+    }
+  }
+}
+
+class GeometricProgression {
+  void output(int a, int f, int c) {
+    for (int n = 1; n <= c; n++) {
+      System.out.println(a * (int) Math.pow(f, n - 1));
+    }
+  }
+}
+----
+
+Notice that for both progressions we need the `for loop` and the call to `println`. The difference is in the calculation of the nth value. So we could extract the common part to an abstract class:
+[source, java]
+----
+abstract class Progression {
+  void output(int a, int f, int c) {
+    for (int n = 1; n <= c; n++) {
+      System.out.println(nth(a, f, n));
+    }
+  }
+
+  abstract int nth(int a, int f, int n);
+}
+----
+
+and then extend the abstract class for each progression type, overriding the abstract method with the specific version for the algorithm:
+[source, java]
+----
+class ArithmeticProgression extends Progression {
+  @Override
+  int nth(int a, int f, int n) {
+    return a + (n - 1) * f;
+  }
+}
+
+class GeometricProgression extends Progression {
+  @Override
+  int nth(int a, int f, int n) {
+    return a * (int) Math.pow(f, n - 1);
+  }
+}
+----
+
+By doing this we have cleanly separated the two concerns of:
+
+. iterating and printing values (in the parent)
+. calculating the nth value (in the children)
+
+i.e. we get separation of concerns via subclassing. When the `output` function is called it delegates the calculation to the correct `nth` function in the child class:
+[source, java]
+----
+Progression arithmeticProgression = new ArithmeticProgression();
+artithmeticProgression.output(3, 2, 5);
+//3, 5, 7, 9, 11
+
+Progression geometricProgression = new GeometricProgression();
+geometricProgression.output(3, 2, 5);
+//3, 6, 12, 24, 48
+----
+
+In Scala, the separation of concerns can be achieved using function composition. We start by defining the functions to calculate the nth values for both progression types:
+[source, java]
+----
+def arithmeticNth(a: Int, f: Int, n: Int): Int =
+  a + (n - 1) * f
+
+def geometricNth(a: Int, f: Int, n: Int): Int =
+  a * scala.math.pow(f, n - 1).toInt
+----
+
+We then define a function that takes one of these two functions as a parameter:
+[source, java]
+----
+def outputProgression(a: Int,
+                      f: Int,
+                      c: Int,
+                      nth: (Int, Int, Int) => Int) {
+  for(n <- 1 to c) {
+    println(nth(a, f, n))
+  }
+}
+
+outputProgression(3, 2, 5, arithmeticNth)
+//3, 5, 7, 9, 11
+
+outputProgression(3, 2, 5, geometricNth)
+//3, 6, 12, 24, 48
+----
+
+Kotlin is pretty similar:
+[source, kotlin]
+----
+val arithmeticNth = fun(a: Int, f: Int, n: Int): Int {
+  return a + (n - 1) * f
+}
+
+fun Int.pow(n: Int): Int =
+  Math.pow(this.toDouble(), n.toDouble()).toInt()
+
+val geometricNth = fun(a: Int, f: Int, n: Int): Int {
+  return a * a.pow(n - 1)
+}
+
+fun outputProgression(a: Int,
+                      f: Int,
+                      c: Int,
+                      nth: (Int, Int, Int) -> Int) {
+  (1..c).forEach { n -> println(nth(a, f, n)) }
+}
+
+outputProgression(3, 2, 5, arithmeticNth)
+//3, 5, 7, 9, 11
+
+outputProgression(3, 2, 5, geometricNth)
+//3, 6, 12, 24, 48
+----
+
+Clojure is also pretty much the same:
+[source, clojure]
+----
+(defn output-progression
+  [a f n nth]
+  (map #(println (nth a f %)) (range 1 (inc n))))
+
+(defn arithmetic-nth
+  [a f n]
+  (+ a (* (dec n) f)))
+
+(defn geometric-nth
+  [a f n]
+  (int (* a (Math/pow f (dec n)))))
+
+(output-progression 3 2 5 arithmetic-nth)
+;; 3, 5, 7, 9, 11
+
+(output-progression 3 2 5 geometric-nth)
+;; 3, 6, 12, 24, 48
+----

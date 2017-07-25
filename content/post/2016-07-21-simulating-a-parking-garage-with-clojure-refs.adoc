@@ -1,0 +1,183 @@
++++
+title = "Simulating a parking garage with Clojure Refs"
+date = "2016-07-21"
+categories = ["clojure"]
+keywords = ["clojure refs", "introduction", "tutorial", "example"]
++++
+
+:source-highlighter: pygments
+
+In this post, we will use a simple problem to illustrate http://clojure.org/reference/refs[Clojure Refs]. All sources are on https://github.com/anthonygalea/garage-simulation[GitHub]. The problem is to simulate operations on a garage used for parking vehicles.
+
+image::/images/2016-07-21-parking.png[]
+
+The vehicles are uniquely identified using their `licence plate`. We will represent locations in the garage with vectors like `[1 2]`. This vector would represent parking space 2 on level 1. The operations required are:
+
+[source, clojure]
+----
+(defn locate-vehicle
+  "Given a licence plate, returns the location of a vehicle as a vector with the
+   level and parking space number, nil if not present."
+  [licence-plate])
+
+(defn number-of-free-parking-spaces
+  "Returns the current number of free parking spaces in the garage."
+  [])
+
+(defn enter-garage!
+   "Simulates a vehicle entering the garage. Return the state of the garage if
+   there is still free space, nil if no empty parking space exists."
+  [licence-plate])
+
+(defn exit-garage!
+  "Simulates a vehicle exiting the garage. Returns the state of the garage if
+   such a vehicle exists in the garage, nil otherwise."
+  [licence-plate])
+----
+
+We can describe the number of parking spaces on each garage level with a map. For example if our garage has two parking levels, each holding 15 and 10 parking spaces respectively, the map will be:
+[source, clojure]
+----
+(def parking-spaces {0 15
+                     1 10})
+----
+
+This map will be used to initialize the state of the garage:
+
+[source, clojure]
+----
+(defn initialize-garage!
+  "Sets the initial state of the garage."
+  [parking-spaces])
+----
+
+Based on the signatures of the operations we have defined above, we could write a few tests using https://github.com/marick/Midje[midje] to indicate how the operations could be used:
+
+[source, clojure]
+----
+(against-background
+ [(before :facts (initialize-garage! {0 2 1 1}))]
+
+ (fact "After a vehicle enters the garage it should be possible to locate it."
+       (let [licence-plate "ASDF001"]
+           (enter-garage! licence-plate)
+           (locate-vehicle licence-plate)) => [0 0])
+
+ (fact "If an attempt to locate an unknown vehicle is made nil should be
+       returned."
+       (locate-vehicle "unknown licence plate") => nil)
+
+ (fact "After a vehicle enters the garage the number of free parking spaces
+        should be one less than before."
+       (let [free-parking-spaces-before (number-of-free-parking-spaces)]
+         (enter-garage! "ASDF001")
+         (number-of-free-parking-spaces) => (dec free-parking-spaces-before)))
+
+ (fact "If too many vehicles try to enter the garage nil should be returned."
+       (enter-garage! "ASDF001")
+       (enter-garage! "ASDF002")
+       (enter-garage! "ASDF003")
+       (enter-garage! "ASDF004") => nil)
+
+ (fact "Given a vehicle entered the garage it should be possible for that
+       vehicle to exit the garage."
+       (let [licence-plate "ASDF001"
+             free-parking-spaces-before (number-of-free-parking-spaces)]
+         (enter-garage! licence-plate)
+         (exit-garage! licence-plate) => {}
+         (number-of-free-parking-spaces) => free-parking-spaces-before
+         (locate-vehicle licence-plate) => nil))
+
+ (fact "If an unknown vehicle is requested to exit the garage nil should be
+       returned."
+       (exit-garage! "ASDF001") => nil))
+----
+
+Before we move on to the implementation, what is a `ref`? In Clojure data is immutable, so we have constructs to model the `state` of something as it changes over time. The "something" we model has an `identity` and this identity can refer to various snapshots of its `state` over time. Let's start with a simpler construct, the `atom`. This is perhaps better explained with an example. Start a REPL and follow along:
+
+[source, clojure]
+----
+;; declare an empty map called vehicles
+(def vehicles {})
+;; next we apply conj to it to add a new vehicle and it's location in the garage
+(conj vehicles ["JAFA017" [1 1]])
+;; => {"JAFA017" [1 1]}
+;; the returned map has one entry as expected but when we inspect vehicles we find it's still empty:
+vehicles
+;; => {}
+;; oh right, vehicles is immutable
+
+;; we need a way to update vehicles to the new state so we turn vehicles into an atom:
+(def vehicles (atom {}))
+vehicles
+;; => #<Atom@dfdcf6c {}>
+;; ok so now vehicles is not a map, it's an atom
+;; to get to the state of the atom we have to dereference it with @ like this:
+@vehicles
+;; {}
+;; to change it we use swap!:
+(swap! vehicles conj ["JAFA017" [1 1]])
+;; => {"JAFA017" [1 1]})
+;; once again:
+(swap! vehicles conj ["HSLE328" [1 2]])
+;; => {"HSLE328" [1 2], "JAFA017" [1 1]}
+;; and if we check what vehicles stores:
+@vehicles
+;; => {"HSLE328" [1 2], "JAFA017" [1 1]}
+----
+
+`swap!` takes an atom (in this case `vehicles`), a function (in this case `conj`) and additional parameters (in this case `[["JAFA017"] [1 1]]`), reads the current value the atom refers to, applies the function to the value, and tells the atom to point to the value returned. These steps happen atomically. But what if when we want to mutate two identities in a transaction? We can't use two atoms as there is no way to `swap!` on both of them together. In this case we use `refs` and the `dosync` function:
+
+[source, clojure]
+----
+(def vehicles (ref {}))
+(def empty-parking-spaces (ref #{}))
+----
+
+So now we have two `refs`. `vehicles` that have entered the garage will be tracked in a map using the licence plate as the key and the location assigned as the value. `empty-parking-spaces` is a set in which we will store all available parking spaces using vectors like `[1 3]` which would indicate a free space on level 1, parking space 3. Every time a vehicle enters the garage, we add it to `vehicles` and remove the parking space that was allocated from `empty-parking-spaces`:
+
+[source, clojure]
+----
+(defn enter-garage!
+  "Simulates a vehicle entering the garage. Return the state of the garage if
+   there is still free space, nil if no empty parking space exists."
+  [licence-plate]
+  (dosync
+   (if-let [parking-space (first @empty-parking-spaces)]
+     (do
+       (alter empty-parking-spaces disj parking-space)
+       (alter vehicles assoc licence-plate parking-space)))))
+----
+
+Similarly for `exit-garage!` we remove the entry from `vehicles` and add the location previously occupied by the vehicle back to `empty-parking-spaces` so we can use it again in the future:
+
+[source, clojure]
+----
+(defn exit-garage!
+  "Simulates a vehicle exiting the garage. Returns the state of the garage if
+   such a vehicle exists in the garage, nil otherwise."
+  [licence-plate]
+  (dosync
+   (if-let [vehicle-location (locate-vehicle licence-plate)]
+     (do
+       (alter empty-parking-spaces conj vehicle-location)
+       (alter vehicles dissoc licence-plate)))))
+----
+
+Notice that with `dosync` the operations are happening within a transaction, so we don't need to worry about two cars potentially getting assigned the same parking space. Finally, it is trivial to define the operations `locate-vehicle` and `number-of-free-parking-spaces`:
+
+[source, clojure]
+----
+(defn locate-vehicle
+  "Given a licence plate, returns the location of a vehicle as a vector with the
+   level and parking space number, nil if not present."
+  [licence-plate]
+  (@vehicles licence-plate))
+
+(defn number-of-free-parking-spaces
+  "Returns the current number of free parking spaces in the garage."
+  []
+   (count @empty-parking-spaces))
+----
+
+If you want to take a look at the complete sources they're on https://github.com/anthonygalea/garage-simulation[GitHub]. In the http://www.anthony-galea.com/blog/post/hello-parking-garage-meet-clojure.spec/[next post] we will take a look at how we can apply clojure.spec.

@@ -1,0 +1,28 @@
++++
+title = "4Clojure solutions over time"
+date = "2016-08-03"
+categories = ["clojure"]
+keywordss = ["4clojure","clojure","gorilla-repl"]
++++
+
+:source-highlighter: pygments
+
+++++
+<div class="paragraph">
+<iframe
+  width="100%" height="400"
+  src="//jsfiddle.net/anthonygalea/yukpa0os/embedded/result,js/"
+  allowfullscreen="allowfullscreen"
+  frameborder="0">
+</iframe>
+</div>
+++++
+
+Somebody recently posted in the Clojure subreddit that there had just been over 1 million problems solved on the http://www.4clojure.com/[4Clojure] website. When I saw this I wondered if we could get a graph of the number of solutions solved over time, so I sent an email to the 4Clojure guys asking if they had the data to generate such a graph. The reply:
+
+[quote]
+____
+I don't think we actually save that anywhere, no. Too bad; that'd be a neat graph.
+____
+
+Checked http://web.archive.org/web/*/4clojure.com[Wayback machine] and there were a bunch of snapshots since 2011. A few curl requests and some grep filtering later I had the counts and could plot a graph with http://c3js.org/[C3.js].

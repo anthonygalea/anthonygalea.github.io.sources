@@ -1,0 +1,326 @@
++++
+title = "Iterated Function Systems"
+date = "2017-01-31"
+categories = ["clojure", "interactive"]
+keywords = ["clojure"]
++++
+
+image::/images/2017-01-31-weird.png[]
+
+Above you can see a static image generated using this web page. Below you should see a picture of a tree that your browser just generated using the code snippet below it. You can increase the value for `iterations` and the tree will repaint. Go ahead, give it a try.
+
+++++
+<div class="listingblock" style="display:none"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(ns fractals.ifs
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
+	(:require [cljs.core.async :refer [chan &lt;! &gt;! timeout close!]]))
+
+(defn transform [transformation point]
+  (let [[a b c d e f] transformation
+        [x y] point]
+    [(+ e
+        (+ (* a x)
+           (* b y)))
+     (+ f
+        (+ (* c x)
+           (* d y)))]))
+
+(defn log [x y]
+  (/ (.log js/Math x)
+     (.log js/Math y)))
+
+(defn draw-transformations [transformations canvas]
+  (let [canvas (js/document.getElementById canvas)
+        ctx (.getContext canvas "2d")
+        width (.-width canvas)
+        height (.-height canvas)
+        clear (.clearRect ctx 0 0 width height)
+        n (count transformations)]
+    (.rect ctx 0 0 width height)
+    (.stroke ctx)
+    (doseq [[[a b c d e f] colour]
+            (map vector transformations
+                 (cycle (map #(+ 100 (int (/ 125 %))) (range n))))]
+      (.setTransform ctx a b c d (* e width) (* f height))
+      (set! (.-fillStyle ctx) (str "rgb(" colour "," colour "," colour ")"))
+      (.fillRect ctx 0 0 width height))
+    (.setTransform ctx 1 0 0 1 0 0)))
+
+(defn draw-ifs [{:keys [iterations transformations colour-1 colour-2]}
+                canvas]
+  (draw-transformations transformations (str canvas "-transformations"))
+  (let [canvas (js/document.getElementById canvas)
+        ctx (.getContext canvas "2d")
+        width (.-width canvas)
+        height (.-height canvas)
+        clear (.clearRect ctx 0 0 width height)
+        image (.createImageData ctx width height)
+        points (drop 100
+                     (persistent!
+                       (reduce (fn [points i]
+                                 (conj! points
+                                        (transform (rand-nth transformations)
+                                                   (nth points i))))
+                               (transient [[1 1]])
+                               (range iterations))))
+        max-x (apply max (map first points))
+        max-y (apply max (map second points))
+        mapped (frequencies
+                (map (fn [[x y]]
+                       [(int (* width (/ x max-x)))
+                        (int (* height (/ y max-y)))])
+                     points))
+        max-v (apply max (map second mapped))
+        pixel-count (* width height)
+        pixel-data (persistent!
+                    (reduce (fn [pixels [[x y] v]]
+                              (let [r1 (log v max-v)
+                                    r2 (- 1 r1)]
+                                (conj! pixels
+                                       (into [(* 4 (+ x (- pixel-count (* width y))))]
+                                             (map #(+ (* r1 %1) (* r2 %2)) colour-1 colour-2)))))
+                            (transient [])
+                            mapped))]
+    (doseq [[i r g b] pixel-data]
+      (aset image.data i r)
+      (aset image.data (+ i 1) g)
+      (aset image.data (+ i 2) b)
+      (aset image.data (+ i 3) 255))
+    (.putImageData ctx image 0 0)))
+
+</code></pre></div></div>
+++++
+
+++++
+<div class="imageblock"><div class="content">
+  <canvas id="canvas-tree-transformations" width="350" height="350"></canvas>
+  <canvas id="canvas-tree" width="350" height="350"></canvas>
+</div></div>
+
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(def tree {:colour-1 [23 2 10]
+           :colour-2 [58 173 75]
+           :iterations 40000
+           :transformations [[0.195 -0.488 0.344 0.443 0.4431 0.2453]
+                             [0.462 0.414 -0.252 0.361 0.2511 0.5692]
+                             [-0.058 -0.07 0.453 -0.111 0.5976 0.0969]
+                             [-0.035 0.07 -0.469 -0.022 0.4884 0.5069]
+                             [-0.637 0 0 0.501 0.8562 0.2513]]})
+
+(draw-ifs tree "canvas-tree")
+
+</code></pre></div></div>
+++++
+
+You can see a preview of the transformations on the left. Let's try again, this time with a snowflake:
+
+++++
+<div class="imageblock"><div class="content">
+  <canvas id="canvas-snowflake-transformations" width="350" height="350"></canvas>
+  <canvas id="canvas-snowflake" width="350" height="350"></canvas>
+</div></div>
+
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(def snowflake {:colour-1 [225 255 255]
+                :colour-2 [0 29 30]
+                :iterations 40000
+                :transformations [[0.75 0 0 0.75 0.125 0.125]
+                                  [0.5 0.5 -0.5 0.5 0 0.5]
+                                  [0.25 0 0 0.25 0 0.75]
+                                  [0.25 0 0 0.25 0.75 0.75]
+                                  [0.25 0 0 0.25 0 0]
+                                  [0.25 0 0 0.25 0.75 0]]})
+
+(draw-ifs snowflake "canvas-snowflake")
+
+</code></pre></div></div>
+++++
+
+Perhaps not the best choice of colours, but I'm sure you can fix that. They're RGB. Here's a couple more examples:
+
+++++
+<div class="imageblock"><div class="content">
+  <canvas id="canvas-weed-transformations" width="350" height="350"></canvas>
+  <canvas id="canvas-weed" width="350" height="350"></canvas>
+</div></div>
+
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(def weed {:colour-1 [2 2 0]
+           :colour-2 [154 189 40]
+           :iterations 40000
+           :transformations [[0.5 0 0 0.75 0.2 0]
+                             [0.25 0.1 -0.2 0.3 0.2 0.5]
+                             [0.25 -0.1 0.2 0.3 0.5 0.4]
+                             [0.2 0 0 0.3 0.4 0.55]]})
+
+(draw-ifs weed "canvas-weed")
+
+</code></pre></div></div>
+++++
+
+++++
+<div class="imageblock"><div class="content">
+  <canvas id="canvas-pine-tree-transformations" width="350" height="350"></canvas>
+  <canvas id="canvas-pine-tree" width="350" height="350"></canvas>
+</div></div>
+
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000" data-eval-idle-msec="1000">
+
+(def pine-tree {:colour-1 [3 2 10]
+                :colour-2 [58 173 75]
+                :iterations 40000
+                :transformations [[0.25 0 0 0.9 0.375 0]
+                                  [0.65 0 0 0.75 0.175 0.25]
+                                  [0 -0.5 0.25 0 0.5 0.2]
+                                  [0 0.5 -0.25 0 0.5 0.45]]})
+
+(draw-ifs pine-tree "canvas-pine-tree")
+
+</code></pre></div></div>
+++++
+
+If you play around a bit things can get weird:
+
+++++
+<div class="imageblock"><div class="content">
+  <canvas id="canvas-weird-transformations" width="350" height="350"></canvas>
+  <canvas id="canvas-weird" width="350" height="350"></canvas>
+</div></div>
+
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(def weird {:colour-1 [215 122 126]
+            :colour-2 [0 2 8]
+            :iterations 40000
+            :transformations [[0.5 0.557 -0.357 0.1 0.0951 0.5893]
+                              [0.1 0.157 -0.557 0.4 0.4413 0.5893]
+                              [-0.2 0.257 -0.547 0.3 0.2313 0.5893]
+                              [0.7 0.517 -0.547 0.4 0.0952 0.9893]]})
+
+(draw-ifs weird "canvas-weird")
+
+</code></pre></div></div>
+++++
+
+But how does it work? Well, it is using a technique for drawing fractals known as https://en.wikipedia.org/wiki/Iterated_function_system[Iterated Functions Systems].
+
+You can find all the code required for this page to work below. Let's go through it step by step. First a helper function to perform a transformation on a point:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(defn transform [transformation point]
+  (let [[a b c d e f] transformation
+        [x y] point]
+    [(+ e
+        (+ (* a x)
+           (* b y)))
+     (+ f
+        (+ (* c x)
+           (* d y)))]))
+
+</code></pre></div></div>
+++++
+
+and another helper function to calculate \$\log_y  x\$ which will be used to determine the colour of a pixel:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(defn log [x y]
+  (/ (.log js/Math x)
+     (.log js/Math y)))
+
+</code></pre></div></div>
+++++
+
+Next we have another function that is used to display a preview of the transformations on a canvas:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-usinggettingduration="60000">
+
+(defn draw-transformations [transformations canvas]
+  (let [canvas (js/document.getElementById canvas)
+        ctx (.getContext canvas "2d")
+        width (.-width canvas)
+        height (.-height canvas)
+        clear (.clearRect ctx 0 0 width height)
+        n (count transformations)]
+    (.rect ctx 0 0 width height)
+    (.stroke ctx)
+    (doseq [[[a b c d e f] colour]
+            (map vector transformations
+                 (cycle (map #(+ 100 (int (/ 125 %))) (range n))))]
+      (.setTransform ctx a b c d (* e width) (* f height))
+      (set! (.-fillStyle ctx) (str "rgb(" colour "," colour "," colour ")"))
+      (.fillRect ctx 0 0 width height))
+    (.setTransform ctx 1 0 0 1 0 0)))
+
+</code></pre></div></div>
+++++
+
+And finally the `draw-ifs` function that renders the fractal using the parameters provided:
+
+++++
+<div class="listingblock"><div class="content"><pre class="highlight">
+<code class="language-klipse" data-max-eval-duration="60000">
+
+(defn draw-ifs [{:keys [iterations transformations colour-1 colour-2]}
+                canvas]
+  (draw-transformations transformations (str canvas "-transformations"))
+  (let [canvas (js/document.getElementById canvas)
+        ctx (.getContext canvas "2d")
+        width (.-width canvas)
+        height (.-height canvas)
+        clear (.clearRect ctx 0 0 width height)
+        image (.createImageData ctx width height)
+        points (drop 100
+                     (persistent!
+                       (reduce (fn [points i]
+                                 (conj! points
+                                        (transform (rand-nth transformations)
+                                                   (nth points i))))
+                               (transient [[1 1]])
+                               (range iterations))))
+        max-x (apply max (map first points))
+        max-y (apply max (map second points))
+        mapped (frequencies
+                (map (fn [[x y]]
+                       [(int (* width (/ x max-x)))
+                        (int (* height (/ y max-y)))])
+                     points))
+        max-v (apply max (map second mapped))
+        pixel-count (* width height)
+        pixel-data (persistent!
+                    (reduce (fn [pixels [[x y] v]]
+                              (let [r1 (log v max-v)
+                                    r2 (- 1 r1)]
+                                (conj! pixels
+                                       (into [(* 4 (+ x (- pixel-count (* width y))))]
+                                             (map #(+ (* r1 %1) (* r2 %2)) colour-1 colour-2)))))
+                            (transient [])
+                            mapped))]
+    (doseq [[i r g b] pixel-data]
+      (aset image.data i r)
+      (aset image.data (+ i 1) g)
+      (aset image.data (+ i 2) b)
+      (aset image.data (+ i 3) 255))
+    (.putImageData ctx image 0 0)))
+
+</code></pre></div></div>
+++++
+
+The interactive code snippets in this article are powered by https://github.com/viebel/klipse[KLIPSE].

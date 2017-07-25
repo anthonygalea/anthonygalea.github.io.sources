@@ -1,369 +1,381 @@
 +++
-title = "Solutions to 4clojure Elementary Problems"
+title = "Solutions to 4Clojure Elementary Problems"
 date = "2016-03-16"
-categories = ["clojure"]
+categories = ["clojure", "interactive"]
 keywords = ["4clojure", "elementary", "solutions", "problems", "clojure"]
 +++
 
-:source-highlighter: pygments
+In this post, I will share solutions to the elementary problems I solved on http://www.4clojure.com[4Clojure]. You can find all the solutions on https://github.com/anthonygalea/solutions-4clojure[GitHub]. If you have any suggestions/alternative solutions I would love to hear from you.
 
-== Introduction
+== 1. Nothing but the Truth
+This is a clojure form. Enter a value which will make the form evaluate to `true`.
 
-In this post I will share solutions to the elementary problems I solved on http://www.4clojure.com[4clojure]. You can find all the solutions on https://github.com/anthonygalea/solutions-4clojure[github]. If you have any suggestions/alternative solutions I would love to hear from you.
-
-== Solutions
-
-=== 1. Nothing but the Truth
-[source,clojure]
+[source, klipse]
 ----
-;; This is a clojure form.
-;; Enter a value which will make the form evaluate to true.
-(= __ true)
+(def nothing-but-the-truth true)
 
-true
+[(= nothing-but-the-truth true)]
 ----
 
-=== 2. Simple Math
-[source,clojure]
-----
-;; If you are not familiar with polish notation, simple arithmetic might seem confusing.
-(= (- 10 (* 2 3)) __)
+== 2. Simple Math
+If you are not familiar with polish notation, simple arithmetic might seem confusing.
 
-4
+[source, klipse]
 ----
+(def simple-math 4)
 
-=== 3. Intro to Strings
-[source, clojure]
-----
-;; Clojure strings are Java strings.
-;; This means that you can use any of the Java string methods on Clojure strings.
-(= __ (.toUpperCase "hello world"))
-
-"HELLO WORLD"
+[(= (- 10 (* 2 3)) simple-math)]
 ----
 
-=== 4. Intro to Lists
-[source, clojure]
-----
-;; Lists can be constructed with either a function or a quoted form.
-(= (list __) '(:a :b :c))
+== 3. Intro to Strings
+Clojure strings are Java strings. This means that you can use any of the Java string methods on Clojure strings.
 
-:a :b :c
+[source, klipse]
 ----
+(def intro-to-strings "HELLO WORLD")
 
-=== 5. Lists: conj
-[source, clojure]
-----
-;; When operating on a list, the conj function will return a new list with one or more items "added" to the front.
-(= __ (conj '(2 3 4) 1))
-(= __ (conj '(3 4) 2 1))
-
-'(1 2 3 4)
+[(= intro-to-strings (.toUpperCase "hello world"))]
 ----
 
-=== 6. Intro to Vectors
-[source, clojure]
-----
-;; Vectors can be constructed several ways. You can compare them with lists.
-(= [__] (list :a :b :c) (vec '(:a :b :c)) (vector :a :b :c))
+== 4. Intro to Lists
+Lists can be constructed with either a function or a quoted form.
 
-:a :b :c
+[source, klipse]
 ----
-
-=== 7. Vectors: conj
-[source, clojure]
-----
-;; When operating on a Vector, the conj function will return a new vector with one or more items "added" to the end.
-(= __ (conj [1 2 3] 4))
-(= __ (conj [1 2] 3 4))
-
-[1 2 3 4]
+[(= (list :a :b :c) '(:a :b :c))]
 ----
 
-=== 8. Intro to Sets
-[source, clojure]
-----
-;; Sets are collections of unique values.
-(= __ (set '(:a :a :b :c :c :c :c :d :d)))
-(= __ (clojure.set/union #{:a :b :c} #{:b :c :d}))
+== 5. Lists: conj
+When operating on a list, the `conj` function will return a new list with one or more items "added" to the front.
 
-#{:a :b :c :d}
+[source, klipse]
 ----
+(def lists-conj '(1 2 3 4))
 
-=== 9. Sets: conj
-[source, clojure]
-----
-;; When operating on a set, the conj function returns a new set with one or more keys "added".
-(= #{1 2 3 4} (conj #{1 4 3} __))
-
-2
+[(= lists-conj (conj '(2 3 4) 1))
+ (= lists-conj (conj '(3 4) 2 1))]
 ----
 
-=== 10. Intro to Maps
-[source, clojure]
-----
-;; Maps store key-value pairs.
-;; Both maps and keywords can be used as lookup functions.
-;; Commas can be used to make maps more readable, but they are not required.
-(= __ ((hash-map :a 10, :b 20, :c 30) :b))
-(= __ (:b {:a 10, :b 20, :c 30}))
+== 6. Intro to Vectors
+Vectors can be constructed several ways. You can compare them with lists.
 
-20
+[source, klipse]
+----
+(def intro-to-vectors [:a :b :c])
+
+[(= intro-to-vectors (list :a :b :c) (vec '(:a :b :c)) (vector :a :b :c))]
 ----
 
-=== 11. Maps: conj
-[source, clojure]
-----
-;; When operating on a map, the conj function returns a new map with one or more key-value pairs "added".
-(= {:a 1, :b 2, :c 3} (conj {:a 1} __ [:c 3]))
+== 7. Vectors: conj
+When operating on a Vector, the `conj` function will return a new vector with one or more items "added" to the end.
 
-{:b 2}
+[source, klipse]
 ----
+(def vectors-conj [1 2 3 4])
 
-=== 12. Intro to Sequences
-[source, clojure]
-----
-;; All Clojure collections support sequencing.
-;; You can operate on sequences with functions like first, second, and last.
-(= __ (first '(3 2 1)))
-(= __ (second [2 3 4]))
-(= __ (last (list 1 2 3)))
-
-3
+[(= vectors-conj (conj [1 2 3] 4))
+ (= vectors-conj (conj [1 2] 3 4))]
 ----
 
-=== 13. Sequences: rest
-[source, clojure]
-----
-;; The rest function will return all the items of a sequence except the first.
-(= __ (rest [10 20 30 40]))
+== 8. Intro to Sets
+Sets are collections of unique values.
 
-[20 30 40]
+[source, klipse]
 ----
+(def intro-to-sets #{:a :b :c :d})
 
-=== 14. Intro to Functions
-[source, clojure]
-----
-;; Clojure has many different ways to create functions.
-(= __ ((fn add-five [x] (+ x 5)) 3))
-(= __ ((fn [x] (+ x 5)) 3))
-(= __ (#(+ % 5) 3))
-(= __ ((partial + 5) 3))
-
-8
+[(= intro-to-sets (set '(:a :a :b :c :c :c :c :d :d)))
+ (= intro-to-sets (clojure.set/union #{:a :b :c} #{:b :c :d}))]
 ----
 
-=== 15. Double Down
-[source, clojure]
-----
-;; Write a function which doubles a number.
-(= (__ 2) 4)
-(= (__ 3) 6)
-(= (__ 11) 22)
-(= (__ 7) 14)
+== 9. Sets: conj
+When operating on a set, the `conj` function returns a new set with one or more keys "added".
 
-* 2
+[source, klipse]
+----
+(def sets-conj #{1 2 3 4})
+
+[(= sets-conj (conj #{1 4 3} 2))]
 ----
 
-=== 16. Hello World
-[source, clojure]
-----
-;; Write a function which returns a personalized greeting.
-(= (__ "Dave") "Hello, Dave!")
-(= (__ "Jenn") "Hello, Jenn!")
-(= (__ "Rhea") "Hello, Rhea!")
+== 10. Intro to Maps
+Maps store key-value pairs. Both maps and keywords can be used as lookup functions. Commas can be used to make maps more readable, but they are not required.
 
-(fn [name]
+[source, klipse]
+----
+(def intro-to-maps 20)
+
+[(= intro-to-maps ((hash-map :a 10, :b 20, :c 30) :b))
+ (= intro-to-maps (:b {:a 10, :b 20, :c 30}))]
+----
+
+== 11. Maps: conj
+When operating on a map, the `conj` function returns a new map with one or more key-value pairs "added".
+
+[source, klipse]
+----
+(def maps-conj {:a 1, :b 2, :c 3})
+
+[(= maps-conj (conj {:a 1} {:b 2} [:c 3]))]
+----
+
+== 12. Intro to Sequences
+All Clojure collections support sequencing.
+You can operate on sequences with functions like `first`, `second`, and `last`.
+
+[source, klipse]
+----
+(def intro-to-sequences 3)
+
+[(= intro-to-sequences (first '(3 2 1)))
+ (= intro-to-sequences (second [2 3 4]))
+ (= intro-to-sequences (last (list 1 2 3)))]
+----
+
+== 13. Sequences: rest
+The rest function will return all the items of a sequence except the first.
+
+[source, klipse]
+----
+(def sequences-rest [20 30 40])
+
+[(= sequences-rest (rest [10 20 30 40]))]
+----
+
+== 14. Intro to Functions
+Clojure has many different ways to create functions.
+
+[source, klipse]
+----
+(def intro-to-functions 8)
+
+[(= intro-to-functions ((fn add-five [x] (+ x 5)) 3))
+ (= intro-to-functions ((fn [x] (+ x 5)) 3))
+ (= intro-to-functions (#(+ % 5) 3))
+ (= intro-to-functions ((partial + 5) 3))]
+----
+
+== 15. Double Down
+Write a function which doubles a number.
+
+[source, klipse]
+----
+(defn double-down [n]
+  (* 2 n))
+
+[(= (double-down 2) 4)
+ (= (double-down 3) 6)
+ (= (double-down 11) 22)
+ (= (double-down 7) 14)]
+----
+
+== 16. Hello World
+Write a function which returns a personalized greeting.
+
+[source, klipse]
+----
+(defn hello-world [name]
   (str "Hello, " name "!"))
+
+[(= (hello-world "Dave") "Hello, Dave!")
+ (= (hello-world "Jenn") "Hello, Jenn!")
+ (= (hello-world "Rhea") "Hello, Rhea!")]
 ----
 
-=== 17. Sequences: map
-[source, clojure]
-----
-;; The map function takes two arguments: a function (f) and a sequence (s). Map returns a new sequence consisting of the result of applying f to each item of s. Do not confuse the map function with the map data structure.
-(= __ (map #(+ % 5) '(1 2 3)))
+== 17. Sequences: map
+The map function takes two arguments: a function (f) and a sequence (s). Map returns a new sequence consisting of the result of applying f to each item of s. Do not confuse the map function with the map data structure.
 
-'(6 7 8)
+[source, klipse]
 ----
+(def sequences-map '(6 7 8))
 
-=== 18. Sequences: filter
-[source, clojure]
-----
-;; The filter function takes two arguments: a predicate function (f) and a sequence (s). Filter returns a new sequence consisting of all the items of s for which (f item) returns true.
-(= __ (filter #(> % 5) '(3 4 5 6 7)))
-
-'(6 7)
+[(= sequences-map (map #(+ % 5) '(1 2 3)))]
 ----
 
-=== 35. Local bindings
-[source, clojure]
-----
-;; Clojure lets you give local names to values using the special let-form.
-(= __ (let [x 5] (+ 2 x)))
-(= __ (let [x 3, y 10] (- y x)))
-(= __ (let [x 21] (let [y 3] (/ x y))))
+== 18. Sequences: filter
+The filter function takes two arguments: a predicate function (f) and a sequence (s). Filter returns a new sequence consisting of all the items of `s` for which `(f item)` returns `true`.
 
-7
+[source, klipse]
+----
+[(= '(6 7) (filter #(> % 5) '(3 4 5 6 7)))]
 ----
 
-=== 36. Let it Be
-[source, clojure]
-----
-;; Can you bind x, y, and z so that these are all true?
-(= 10 (let __ (+ x y)))
-(= 4 (let __ (+ y z)))
-(= 1 (let __ z))
+== 35. Local bindings
+Clojure lets you give local names to values using the special let-form.
 
-[x 7, y 3, z 1]
+[source, klipse]
 ----
-
-=== 37. Regular Expressions
-[source, clojure]
-----
-;; Regex patterns are supported with a special reader macro.
-(= __ (apply str (re-seq #"[A-Z]+" "bA1B3Ce ")))
-
-"ABC"
+[(= 7 (let [x 5] (+ 2 x)))
+ (= 7 (let [x 3, y 10] (- y x)))
+ (= 7 (let [x 21] (let [y 3] (/ x y))))]
 ----
 
-=== 52. Intro to Destructuring
-[source, clojure]
-----
-;; Let bindings and function parameter lists support destructuring.
-(= [2 4] (let [[a b c d e] [0 1 2 3 4]] __))
+== 36. Let it Be
+Can you bind `x`, `y`, and `z` so that these are all true?
 
-[c e]
+[source, klipse]
 ----
-
-=== 57. Simple Recursion
-[source, clojure]
-----
-;; A recursive function is a function which calls itself. This is one of the fundamental techniques used in functional programming.
-(= __ ((fn foo [x] (when (> x 0) (conj (foo (dec x)) x))) 5))
-
-'(5 4 3 2 1)
+[(= 10 (let [x 7, y 3, z 1] (+ x y)))
+ (= 4 (let [x 7, y 3, z 1] (+ y z)))
+ (= 1 (let [x 7, y 3, z 1] z))]
 ----
 
-=== 64. Intro to Reduce
-[source, clojure]
-----
-;; Reduce takes a 2 argument function and an optional starting value. It then applies the function to the first 2 items in the sequence (or the starting value and the first element of the sequence). In the next iteration the function will be called on the previous return value and the next item from the sequence, thus reducing the entire collection to one value. Don't worry, it's not as complicated as it sounds.
-(= 15 (reduce __ [1 2 3 4 5]))
-(=  0 (reduce __ []))
-(=  6 (reduce __ 1 [2 3]))
+== 37. Regular Expressions
+Regex patterns are supported with a special reader macro.
 
-+
+[source, klipse]
 ----
+(def regular-expressions "ABC")
 
-=== 68. Recurring Theme
-[source, clojure]
-----
-;; Clojure only has one non-stack-consuming looping construct: recur. Either a function or a loop can be used as the recursion point. Either way, recur rebinds the bindings of the recursion point to the values it is passed. Recur must be called from the tail-position, and calling it elsewhere will result in an error.
-(= __
-  (loop [x 5
-         result []]
-    (if (> x 0)
-      (recur (dec x) (conj result (+ 2 x)))
-      result)))
-
-[7 6 5 4 3]
+[(= regular-expressions (apply str (re-seq #"[A-Z]+" "bA1B3Ce ")))]
 ----
 
-=== 71. Rearranging Code: - >
-[source, clojure]
-----
-;; The -> macro threads an expression x through a variable number of forms. First, x is inserted as the second item in the first form, making a list of it if it is not a list already. Then the first form is inserted as the second item in the second form, making a list of that form if necessary. This process continues for all the forms. Using -> can sometimes make your code more readable.
-(= (__ (sort (rest (reverse [2 5 4 1 3 6]))))
-   (-> [2 5 4 1 3 6] (reverse) (rest) (sort) (__))
-   5)
+== 52. Intro to Destructuring
+Let bindings and function parameter lists support destructuring.
 
-last
+[source, klipse]
+----
+[(= [2 4] (let [[a b c d e] [0 1 2 3 4]] [c e]))]
 ----
 
-=== 72. Rearranging Code: - > >
-[source, clojure]
-----
-;; The ->> macro threads an expression x through a variable number of forms. First, x is inserted as the last item in the first form, making a list of it if it is not a list already. Then the first form is inserted as the last item in the second form, making a list of that form if necessary. This process continues for all the forms. Using ->> can sometimes make your code more readable.
-(= (__ (map inc (take 3 (drop 2 [2 5 4 1 3 6]))))
-   (->> [2 5 4 1 3 6] (drop 2) (take 3) (map inc) (__))
-   11)
+== 57. Simple Recursion
+A recursive function is a function which calls itself. This is one of the fundamental techniques used in functional programming.
 
-reduce +
+[source, klipse]
+----
+(def simple-recursion '(5 4 3 2 1))
+
+[(= simple-recursion ((fn foo [x]
+                        (when (> x 0)
+                          (conj (foo (dec x)) x))) 5))]
 ----
 
-=== 134. A nil key
-[source, clojure]
-----
-;; Write a function which, given a key and map, returns true iff the map contains an entry with that key and its value is nil.
-(true?  (__ :a {:a nil :b 2}))
-(false? (__ :b {:a nil :b 2}))
-(false? (__ :c {:a nil :b 2}))
+== 64. Intro to Reduce
+Reduce takes a 2 argument function and an optional starting value. It then applies the function to the first 2 items in the sequence (or the starting value and the first element of the sequence). In the next iteration the function will be called on the previous return value and the next item from the sequence, thus reducing the entire collection to one value. Don't worry, it's not as complicated as it sounds.
 
-(fn [key map]
+[source, klipse]
+----
+(def intro-to-reduce +)
+
+[(= 15 (reduce intro-to-reduce [1 2 3 4 5]))
+ (=  0 (reduce intro-to-reduce []))
+ (=  6 (reduce intro-to-reduce 1 [2 3]))]
+----
+
+== 68. Recurring Theme
+Clojure only has one non-stack-consuming looping construct: `recur`. Either a function or a loop can be used as the recursion point. Either way, recur rebinds the bindings of the recursion point to the values it is passed. Recur must be called from the tail-position, and calling it elsewhere will result in an error.
+
+[source, klipse]
+----
+(def recurring-theme [7 6 5 4 3])
+
+[(= recurring-theme
+   (loop [x 5
+          result []]
+     (if (> x 0)
+       (recur (dec x) (conj result (+ 2 x)))
+       result)))]
+----
+
+== 71. Rearranging Code: - >
+The - > macro threads an expression x through a variable number of forms. First, x is inserted as the second item in the first form, making a list of it if it is not a list already. Then the first form is inserted as the second item in the second form, making a list of that form if necessary. This process continues for all the forms. Using - > can sometimes make your code more readable.
+
+[source, klipse]
+----
+(def rearranging-code last)
+
+[(= (rearranging-code (sort (rest (reverse [2 5 4 1 3 6]))))
+    (-> [2 5 4 1 3 6] (reverse) (rest) (sort) (rearranging-code))
+    5)]
+----
+
+== 72. Rearranging Code: - >>
+The - >> macro threads an expression x through a variable number of forms. First, x is inserted as the last item in the first form, making a list of it if it is not a list already. Then the first form is inserted as the last item in the second form, making a list of that form if necessary. This process continues for all the forms. Using - >> can sometimes make your code more readable.
+
+[source, klipse]
+----
+(defn rearranging-code [s]
+  (reduce + s))
+
+[(= (rearranging-code (map inc (take 3 (drop 2 [2 5 4 1 3 6]))))
+   (->> [2 5 4 1 3 6] (drop 2) (take 3) (map inc) (rearranging-code))
+   11)]
+----
+
+== 134. A nil key
+Write a function which, given a key and map, returns true iff the map contains an entry with that key and its value is nil.
+
+[source, klipse]
+----
+(defn a-nil-key [key map]
   (if (contains? map key)
     (= (key map) nil)
   	false))
+
+[(true?  (a-nil-key :a {:a nil :b 2}))
+ (false? (a-nil-key :b {:a nil :b 2}))
+ (false? (a-nil-key :c {:a nil :b 2}))]
 ----
 
-=== 145. For the win
-[source, clojure]
-----
-;; Clojure's for macro is a tremendously versatile mechanism for producing a sequence based on some other sequence(s). It can take some time to understand how to use it properly, but that investment will be paid back with clear, concise sequence-wrangling later. With that in mind, read over these for expressions and try to see how each of them produces the same result.
-(= __ (for [x (range 40)
-            :when (= 1 (rem x 4))]
-        x))
-(= __ (for [x (iterate #(+ 4 %) 0)
-            :let [z (inc x)]
-            :while (< z 40)]
-        z))
-(= __ (for [[x y] (partition 2 (range 20))]
-        (+ x y)))
+== 145. For the win
+Clojure's for macro is a tremendously versatile mechanism for producing a sequence based on some other sequence(s). It can take some time to understand how to use it properly, but that investment will be paid back with clear, concise sequence-wrangling later. With that in mind, read over these for expressions and try to see how each of them produces the same result.
 
-[1 5 9 13 17 21 25 29 33 37]
+[source, klipse]
+----
+(def for-the-win [1 5 9 13 17 21 25 29 33 37])
+
+[(= for-the-win (for [x (range 40)
+             :when (= 1 (rem x 4))]
+         x))
+ (= for-the-win (for [x (iterate #(+ 4 %) 0)
+             :let [z (inc x)]
+             :while (< z 40)]
+         z))
+ (= for-the-win (for [[x y] (partition 2 (range 20))]
+         (+ x y)))]
 ----
 
-=== 156. Map Defaults
-[source, clojure]
+== 156. Map Defaults
+When retrieving values from a map, you can specify default values in case the key is not found:
+`(= 2 (:foo {:bar 0, :baz 1} 2))`
+However, what if you want the map itself to contain the default values? Write a function which takes a default value and a sequence of keys and constructs a map.
+[source, klipse]
 ----
-;; When retrieving values from a map, you can specify default values in case the key is not found:
-(= 2 (:foo {:bar 0, :baz 1} 2))
-;; However, what if you want the map itself to contain the default values?
-;; Write a function which takes a default value and a sequence of keys and constructs a map.
-(= (__ 0 [:a :b :c]) {:a 0 :b 0 :c 0})
-(= (__ "x" [1 2 3]) {1 "x" 2 "x" 3 "x"})
-(= (__ [:a :b] [:foo :bar]) {:foo [:a :b] :bar [:a :b]})
-
-(fn [default keys]
+(defn map-defaults [default keys]
   (zipmap keys (repeat default)))
+
+[(= (map-defaults 0 [:a :b :c]) {:a 0 :b 0 :c 0})
+ (= (map-defaults "x" [1 2 3]) {1 "x" 2 "x" 3 "x"})
+ (= (map-defaults [:a :b] [:foo :bar]) {:foo [:a :b] :bar [:a :b]})]
 ----
 
-=== 161. Subset and Superset
-[source, clojure]
-----
-;; Set A is a subset of set B, or equivalently B is a superset of A, if A is "contained" inside B. A and B may coincide.
-(clojure.set/superset? __ #{2})
-(clojure.set/subset? #{1} __)
-(clojure.set/superset? __ #{1 2})
-(clojure.set/subset? #{1 2} __)
+== 161. Subset and Superset
+Set A is a subset of set B, or equivalently B is a superset of A, if A is "contained" inside B. A and B may coincide.
 
-#{1 2}
+[source, klipse]
 ----
+(def subset-and-superset #{1 2})
 
-=== 162. Logical falsity and truth
-[source, clojure]
-----
-;; In Clojure, only nil and false represent the values of logical falsity in conditional tests - anything else is logical truth.
-(= __ (if-not false 1 0))
-(= __ (if-not nil 1 0))
-(= __ (if true 1 0))
-(= __ (if [] 1 0))
-(= __ (if [0] 1 0))
-(= __ (if 0 1 0))
-(= __ (if 1 1 0))
-
-1
+[(clojure.set/superset? subset-and-superset #{2})
+ (clojure.set/subset? #{1} subset-and-superset)
+ (clojure.set/superset? subset-and-superset #{1 2})
+ (clojure.set/subset? #{1 2} subset-and-superset)]
 ----
 
-== Conclusion
+== 162. Logical falsity and truth
+In Clojure, only nil and false represent the values of logical falsity in conditional tests - anything else is logical truth.
+
+[source, klipse]
+----
+(def logical-falsity-and-truth 1)
+
+[(= logical-falsity-and-truth (if-not false 1 0))
+ (= logical-falsity-and-truth (if-not nil 1 0))
+ (= logical-falsity-and-truth (if true 1 0))
+ (= logical-falsity-and-truth (if [] 1 0))
+ (= logical-falsity-and-truth (if [0] 1 0))
+ (= logical-falsity-and-truth (if 0 1 0))
+ (= logical-falsity-and-truth (if 1 1 0))]
+----
 
 These set of problems are pretty simple to solve which is excellent if you're just getting started with a language. In future posts I will continue with harder problems. If you want to dive deeper into https://clojure.org/[Clojure] check out Daniel Higginbotham's book: http://www.braveclojure.com/[Clojure for the Brave and True].

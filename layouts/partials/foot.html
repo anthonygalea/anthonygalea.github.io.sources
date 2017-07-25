@@ -1,4 +1,4 @@
-<footer>
+<!-- <footer>
   <div class="paragraph">
     <ul>
       <li>
@@ -15,11 +15,25 @@
       </li>
     </ul>
   </div>
-</footer>
+</footer> -->
+
+<script>
+ window.klipse_settings = {
+     selector: '.language-klipse',// css selector for the html elements you want to klipsify
+     codemirror_options_in: {
+         indentUnit: 2,
+         lineWrapping: true,
+         lineNumbers: true,
+         autoCloseBrackets: true
+     }
+ };
+
+</script>
+<script src="https://storage.googleapis.com/app.klipse.tech/plugin/js/klipse_plugin.js"></script>
 
 {{ if isset .Site.Params "highlight" }}<script src="{{ "/js/highlight.pack.js" | absURL }}"></script>
 <script>hljs.initHighlightingOnLoad();</script>{{ end }}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-MML-AM_HTMLorMML" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_HTMLorMML" type="text/javascript"></script>
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
   tex2jax: {

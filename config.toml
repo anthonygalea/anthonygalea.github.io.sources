@@ -2,6 +2,7 @@ baseurl = "http://www.anthony-galea.com/"
 languageCode = "en-us"
 title = "Anthony Galea"
 paginate = 42
+ignoreFiles = ["^\\.#"]
 
 [author]
     name = "Anthony Galea"
@@ -16,7 +17,7 @@ paginate = 42
   googleAnalytics = "UA-38752250-1"
   github = "https://github.com/anthonygalea"
   # twitter = "https://twitter.com/_anthonygalea"
-  linkedin = "https://at.linkedin.com/in/anthonygalea"
+  # linkedin = "https://at.linkedin.com/in/anthonygalea"
   email = "mailto:anthony.galea@gmail.com"
   rss = true
   truncate = true

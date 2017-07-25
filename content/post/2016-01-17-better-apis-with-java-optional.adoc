@@ -1,15 +1,13 @@
 +++
 title = "Better APIs with Java Optional"
 date = "2016-01-17"
-categories = ["java"]
+categories = ["java", "groovy"]
 keywords = ["java", "optional"]
 +++
 
 :source-highlighter: pygments
 
-== Introduction
-
-In java codebases it is very typical to come across code similar to the following:
+In Java codebases it is very typical to come across code similar to the following:
 [source,java]
 ----
 interface PlaneProvider {
