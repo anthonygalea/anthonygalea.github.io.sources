@@ -1,4 +1,4 @@
-baseurl = "http://www.anthony-galea.com/"
+baseurl = "https://www.anthony-galea.com/"
 languageCode = "en-us"
 title = "Anthony Galea"
 paginate = 42

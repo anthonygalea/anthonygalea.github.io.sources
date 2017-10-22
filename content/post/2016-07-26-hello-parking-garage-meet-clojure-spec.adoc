@@ -5,83 +5,95 @@ categories = ["clojure"]
 keywords = ["clojure spec", "introduction", "tutorial", "example"]
 +++
 
-:source-highlighter: pygments
+In this post, we will take the https://www.anthony-galea.com/blog/post/simulating-a-parking-garage-with-clojure-refs/[parking garage problem from the previous post] and see how `clojure.spec` might be applied. If you are new to clojure.spec you can check out the http://clojure.org/about/spec[rationale] and the  http://clojure.org/guides/spec[guide] on clojure.org. Let's start by specing the data. Recall that we used a map to state how many parking spaces are available on each garage level:
 
-In this post, we will take the http://www.anthony-galea.com/blog/post/simulating-a-parking-garage-with-clojure-refs/[parking garage problem from the previous post] and see how `clojure.spec` might be applied. If you are new to clojure.spec you can check out the http://clojure.org/about/spec[rationale] and the  http://clojure.org/guides/spec[guide] on clojure.org. Let's start by specing the data. Recall that we used a map to state how many parking spaces are available on each garage level:
-
-[source, clojure]
+[source, klipse]
 ----
+(ns garage-simulation.core)
+
 (def parking-spaces {0 15
                      1 10})
 ----
 
 We could spec the components of this map `level` and `number-of-parking-spaces` as positive integers:
 
-[source, clojure]
+[source, klipse]
 ----
+(require '[cljs.spec :as s])
+
 (s/def ::level (s/and int? (s/or :zero zero? :positive pos?)))
 (s/def ::number-of-parking-spaces (s/and int? pos?))
 ----
 
-`parking-spaces` can then be specd like so:
+`parking-spaces` can then be specd like this:
 
-[source, clojure]
+[source, klipse]
 ----
 (s/def ::parking-spaces (s/map-of ::level ::number-of-parking-spaces))
 ----
 
 We can then check the validity using `clojure.spec/valid?`:
 
-[source, clojure]
+[source, klipse]
 ----
-(s/valid? ::parking-spaces {0 15 1 10}) ;;=> true
+(s/valid? ::parking-spaces {0 15 1 10})
 ----
 
 If we were to try an invalid map:
 
-[source, clojure]
+[source, klipse]
 ----
-(s/valid? ::parking-spaces {0 15 1 "10"}) ;;=> false
+(s/valid? ::parking-spaces {0 15 1 "10"})
 ----
 
-If we're confused as to why our data is not valid, we can use the `clojure.spec/explain` or `clojure.spec/explain-data` functions to figure out what's up. One outputs to stdout, the other returns a map we can more easily traverse:
+If we're confused as to why our data is not valid, we can use the `clojure.spec/explain` function to figure out what's wrong:
 
-[source, clojure]
+[source, klipse]
 ----
 (s/explain ::parking-spaces {0 15 1 "10"})
-;; In: [1 1] val: "10" fails spec: :garage-simulation.core/number-of-parking-spaces at: [1] predicate: int?
+----
 
+or `clojure.spec/explain-data` to get a map we can more easily traverse:
+[source, klipse]
+----
 (s/explain-data ::parking-spaces {0 15 1 "10"})
-;; => #:clojure.spec{:problems ({:path [1], :pred int?, :val "10", :via [:garage-simulation.core/parking-spaces :garage-simulation.core/number-of-parking-spaces], :in [1 1]})}
 ----
 
 Using this spec we can even generate some valid samples using the `clojure.spec.gen/generate` or `clojure.spec.gen/sample` functions:
 
-[source, clojure]
+[source, klipse]
 ----
-(g/generate (s/gen ::parking-spaces))
-;; => {2868014 31, 3118 28, 46838612 227837, 2631 940026, 109 959746, 275023 58, 61032 3846, 24482 11839, 4370470 92, 1826 412743, 47082 2125773, 190 236375948}
+(require '[cljs.spec.impl.gen :as g]
+         '[clojure.test.check :as t])
 
-(g/sample (s/gen ::parking-spaces))
-;; => ({0 1, 2 3} {0 1, 1 1} {0 1, 1 189, 3 2} {1 1, 0 15, 3 1, 2 6} {0 1, 1 5, 4 5, 15 3, 22 6, 6 1, 3 1, 2 2, 8 5} {} {17 10, 5 10, 2 3} {0 7, 30 25, 48 22, 7 117, 10 19, 31 325} {0 2, 1 46, 39 677, 13 69, 6 9, 3 6, 2 712, 23 1, 19 31, 115 21, 5 5} {0 84, 1 2, 15 1, 355 37})
+(g/generate (s/gen ::parking-spaces))
 ----
+ => {2868014 31, 3118 28, 46838612 227837, 2631 940026, 109 959746, 275023 58, 61032 3846, 24482 11839, 4370470 92, 1826 412743, 47082 2125773, 190 236375948}
+
+[source, klipse]
+----
+(g/sample (s/gen ::parking-spaces))
+----
+
+ => ({0 1, 2 3} {0 1, 1 1} {0 1, 1 189, 3 2} {1 1, 0 15, 3 1, 2 6} {0 1, 1 5, 4 5, 15 3, 22 6, 6 1, 3 1, 2 2, 8 5} {} {17 10, 5 10, 2 3} {0 7, 30 25, 48 22, 7 117, 10 19, 31 325} {0 2, 1 46, 39 677, 13 69, 6 9, 3 6, 2 712, 23 1, 19 31, 115 21, 5 5} {0 84, 1 2, 15 1, 355 37})
 
 At this point you can see that these samples don't really match reality because in parking garages levels usually start at 0 and increase consecutively. We could spec this on the map of course, but even better would be to switch to a data structure which already has these constraints i.e. just use a vector :)
 
-[source, clojure]
+[source, klipse]
 ----
 (def parking-spaces [15 10])
 
 (s/def ::parking-spaces (s/coll-of ::number-of-parking-spaces :kind vector?))
 
 (g/generate (s/gen ::parking-spaces))
+----
+
 ;; => [359765 242401325 199244 8685 227771037 10073702 21779006 24302758 347572 6381197 84 1488130 1008076 293347674 135 3109580]
 ;; might be tough to make it out of this garage :)
-----
 
 Having done this change we will need to tweak `intialize-garage!` a bit:
 
-[source, clojure]
+[source, klipse]
 ----
 (defn initialize-garage!
   "Sets the initial state of the garage."

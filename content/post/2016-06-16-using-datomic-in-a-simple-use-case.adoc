@@ -7,7 +7,7 @@ keywords = ["datomic", "introduction", "tutorial", "example"]
 
 :source-highlighter: pygments
 
-In a http://www.anthony-galea.com/blog/post/getting-started-with-compojure-api[previous post], we started building an account service in Clojure using https://github.com/metosin/compojure-api[compojure-api]. In this post, we will add persistence using http://www.datomic.com/[Datomic]. The sources are available on http://github.com/anthonygalea/account-service[GitHub]. For an introduction to Datomic as well as the value-proposition behind it, you should take a look at the http://www.datomic.com/training.html[training resources on the Datomic website]. If the videos are too much of an investment at this stage, you might want to take a look at Daniel Higginbotham's article http://www.flyingmachinestudios.com/programming/datomic-for-five-year-olds/[Datomic for Five Year Olds]. Just as a quick reminder, the service should support creating accounts and transferring money from one account to another. Here are the Swagger docs for the API:
+In a https://www.anthony-galea.com/blog/post/getting-started-with-compojure-api[previous post], we started building an account service in Clojure using https://github.com/metosin/compojure-api[compojure-api]. In this post, we will add persistence using http://www.datomic.com/[Datomic]. The sources are available on http://github.com/anthonygalea/account-service[GitHub]. For an introduction to Datomic as well as the value-proposition behind it, you should take a look at the http://www.datomic.com/training.html[training resources on the Datomic website]. If the videos are too much of an investment at this stage, you might want to take a look at Daniel Higginbotham's article http://www.flyingmachinestudios.com/programming/datomic-for-five-year-olds/[Datomic for Five Year Olds]. Just as a quick reminder, the service should support creating accounts and transferring money from one account to another. Here are the Swagger docs for the API:
 
 image::/images/2016-06-16-swagger.png[]
 
@@ -358,4 +358,4 @@ image::/images/2016-06-16-swagger.png[]
 
 == Conclusion
 
-In this post, we have extended the API from an http://www.anthony-galea.com/blog/post/getting-started-with-compojure-api[earlier post] to use Datomic for persistence. You can find all the source code on http://github.com/anthonygalea/account-service[GitHub].
+In this post, we have extended the API from an https://www.anthony-galea.com/blog/post/getting-started-with-compojure-api[earlier post] to use Datomic for persistence. You can find all the source code on http://github.com/anthonygalea/account-service[GitHub].

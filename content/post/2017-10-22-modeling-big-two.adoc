@@ -1,0 +1,541 @@
++++
+title = "Modeling Big two"
+date = "2017-10-22"
+categories = ["clojure", "interactive"]
+keywords = ["clojure", "clojure spec", "async", "introduction", "tutorial", "example"]
++++
+
+In this post I will describe an approach for modeling the card game https://en.wikipedia.org/wiki/Big_two[Big two]. The game is played with a regular deck of cards and the typical poker hands. You are dealt 13 cards and your objective is to get rid of the cards before your opponents.
+
+We're going to represent a card as a vector with a rank and a suit. For example `[:10 :s]` represents the 10 of spades.
+
+[source, klipse]
+----
+(ns big.two
+  (:require-macros [cljs.core.async.macros :as async.macros])
+  (:require [cljs.core.async :as async]
+            [clojure.set]
+            [clojure.spec :as s]))
+
+(def ranks [:2 :1 :k :q :j :10 :9 :8 :7 :6 :5 :4 :3])
+
+(def suits [:s :h :c :d])
+----
+
+In this game 2 is the strongest card. The suit rank also matters. For example, the 9 of spades `[:9 :s]` is stronger than the 9 of hearts `[:9 :h]`. For this reason the values for the `ranks` and the `suits` are stored in vectors left to right from strongest to weakest.
+
+Now that we have the ranks and the suits we can describe precisely what a card is:
+
+[source, klipse]
+----
+(s/def ::card (s/tuple (set ranks) (set suits)))
+----
+
+Using this spec we can check whether something represents a valid card using `s/valid?`:
+
+[source, klipse]
+----
+[(s/valid? ::card [:2 :d])
+ (s/valid? ::card [:5 :c])
+ (s/valid? ::card [:15 :s])
+ (s/valid? ::card [:d :2])]
+----
+
+If `s/valid?` returns `false` we can check why using `s/explain`:
+
+[source, klipse]
+----
+(s/explain ::card [:15 :s])
+----
+
+Makes sense, 15 is not a valid rank.
+
+Next we can write functions to compare 2 ranks:
+
+[source, klipse]
+----
+(defn stronger-rank? [r1 r2]
+  (= r1 (first (filter #{r1 r2} ranks))))
+
+[(stronger-rank? :2 :6)
+ (stronger-rank? :5 :k)]
+----
+
+or 2 suits:
+
+[source, klipse]
+----
+(defn stronger-suit? [s1 s2]
+  (= s1 (first (filter #{s1 s2} suits))))
+
+[(stronger-suit? :s :d)
+ (stronger-suit? :d :h)]
+----
+
+
+And finally we can make a deck of cards:
+
+[source, klipse]
+----
+(def deck (set (for [rank ranks
+                     suit suits]
+                 [rank suit])))
+
+(count deck)
+----
+
+At the start of the game players get 13 cards each:
+
+[source, klipse]
+----
+(defn deal-cards
+  "Deal random cards from a deck to n players."
+  [n]
+  (->> (shuffle deck)
+       (partition 13)
+       (take n)
+       (map set)
+       (into [])))
+
+(deal-cards 2)
+----
+
+Now that the players have cards, let's describe the different possible hands that the players can play. We can start by defining a `hand` as a collection of distinct cards:
+
+[source, klipse]
+----
+(s/def ::hand
+       (s/coll-of ::card :distinct true))
+
+[(s/valid? ::hand #{[:2 :h][:3 :d]})
+ (s/valid? ::hand #{[:2 :h][:2 :g]})]
+----
+
+The simplest `valid hand` is a single card:
+
+[source, klipse]
+----
+(s/def ::single-card (s/coll-of ::card :count 1))
+
+[(s/valid? ::single-card #{[:5 :s]})
+ (s/valid? ::single-card #{[:5 :s][:5 :h]})]
+----
+
+Another valid hand is a `pair` i.e. any two cards with the same rank:
+
+[source, klipse]
+----
+(s/def ::pair
+       (s/and (s/coll-of ::card :count 2 :distinct true)
+              #(= 1 (count (group-by first %)))))
+
+[(s/valid? ::pair #{[:5 :s][:5 :h]})
+ (s/valid? ::pair #{[:5 :s]})]
+----
+
+`Three of a kind` is similar:
+[source, klipse]
+----
+(s/def ::three-of-a-kind
+       (s/and (s/coll-of ::card :count 3 :distinct true)
+              #(= 1 (count (group-by first %)))))
+
+[(s/valid? ::three-of-a-kind #{[:7 :d][:7 :s][:7 :h]})
+ (s/valid? ::three-of-a-kind #{[:7 :d][:5 :s][:2 :h]})]
+----
+
+Now let's move on to the five card hands starting with the straight i.e. 5 distinct cards in consecutive order:
+
+[source, klipse]
+----
+(s/def ::five-cards
+       (s/coll-of ::card :count 5 :distinct true))
+
+(def straight-ranks [#{:j :q :k :1 :2}
+                     #{:1 :2 :3 :4 :5}
+                     #{:2 :3 :4 :5 :6}
+                     #{:10 :j :q :k :1}
+                     #{:9 :10 :j :q :k}
+                     #{:8 :9 :10 :j :q}
+                     #{:7 :8 :9 :10 :j}
+                     #{:6 :7 :8 :9 :10}
+                     #{:5 :6 :7 :8 :9}
+                     #{:4 :5 :6 :7 :8}
+                     #{:3 :4 :5 :6 :7}])
+
+(def straight? (set straight-ranks))
+
+(s/def ::straight
+       (s/and ::five-cards
+              #(straight? (set (map first %)))))
+
+[(s/valid? ::straight #{[:9 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})
+ (s/valid? ::straight #{[:3 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})
+ (s/valid? ::straight #{[:9 :s] [:7 :d] [:8 :s]})]
+----
+
+Similarly for flush:
+
+[source, klipse]
+----
+(s/def ::flush
+       (s/and ::five-cards
+              #(= 1 (count (group-by second %)))))
+
+[(s/valid? ::flush #{[:3 :s] [:6 :s] [:1 :s] [:j :s] [:10 :s]})
+ (s/valid? ::flush #{[:9 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})]
+----
+
+Full house:
+
+[source, klipse]
+----
+(s/def ::full-house
+       (s/and ::five-cards
+              #(= #{3 2} (set (map (fn [rank] (count rank))
+                                   (vals (group-by first %)))))))
+
+[(s/valid? ::full-house #{[:9 :s] [:9 :d] [:8 :s] [:8 :h] [:8 :c]})
+ (s/valid? ::full-house #{[:9 :s] [:9 :d] [:8 :s] [:j :h] [:10 :c]})]
+----
+
+Poker:
+
+[source, klipse]
+----
+(s/def ::poker
+       (s/and ::five-cards
+              #(= #{4 1} (set (map (fn [rank] (count rank))
+                                   (vals (group-by first %)))))))
+
+[(s/valid? ::poker #{[:9 :s] [:9 :d] [:9 :c] [:9 :h] [:10 :c]})
+ (s/valid? ::poker #{[:9 :s] [:9 :d] [:9 :c] [:j :h] [:10 :c]})]
+----
+
+And finally straight flush:
+
+[source, klipse]
+----
+(s/def ::straight-flush (s/and ::straight
+                               ::flush))
+
+[(s/valid? ::straight-flush #{[:9 :s] [:7 :s] [:8 :s] [:j :s] [:10 :s]})
+ (s/valid? ::straight-flush #{[:9 :s] [:7 :d] [:8 :s] [:j :h] [:10 :c]})]
+----
+
+Building on the specs above we can write the following specs:
+
+[source, klipse]
+----
+(s/def ::five-card-hand (s/or ::straight-flush ::straight-flush
+                              ::poker          ::poker
+                              ::full-house     ::full-house
+                              ::flush          ::flush
+                              ::straight       ::straight))
+
+(s/def ::valid-hand (s/or ::single-card     ::single-card
+                          ::pair            ::pair
+                          ::three-of-a-kind ::three-of-a-kind
+                          ::straight-flush  ::straight-flush
+                          ::poker           ::poker
+                          ::full-house      ::full-house
+                          ::flush           ::flush
+                          ::straight        ::straight))
+----
+
+These hands form a taxonomy as seen in the diagram below:
+
+image::/images/2017-10-22-big-two-taxonomy.png[]
+
+We can express this using `derive` between the specs:
+
+[source, klipse]
+----
+(derive ::single-card     ::valid-hand)
+(derive ::pair            ::valid-hand)
+(derive ::three-of-a-kind ::valid-hand)
+(derive ::five-card-hand  ::valid-hand)
+
+(derive ::straight       ::five-card-hand)
+(derive ::flush          ::five-card-hand)
+(derive ::full-house     ::five-card-hand)
+(derive ::poker          ::five-card-hand)
+(derive ::straight-flush ::five-card-hand)
+
+(isa? ::poker ::valid-hand)
+----
+
+The specs used in conjunction with a multimethod will allow us to determine if a hand will beat another one. Note that in Big two you can only play hands with the same number of cards in the current round. For example you can't beat a pair with a three of a kind:
+
+[source, klipse]
+----
+(defmulti beats-hand?
+  (fn [hand-1 hand-2]
+    (let [type-1 (s/conform ::valid-hand hand-1)
+          type-2 (s/conform ::valid-hand hand-2)]
+      (if-not ((set [type-1 type-2]) :cljs.spec/invalid)
+        [(first type-1) (first type-2)]))))
+----
+
+The dispatching function uses `s/conform` to determine the type of hand and call an appropriate handler. So for the case where we have two single cards we define this handler:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::single-card ::single-card]
+  [hand-1 hand-2]
+  (let [[rank-1 suit-1] (first hand-1)
+        [rank-2 suit-2] (first hand-2)]
+    (if (= rank-1 rank-2)
+      (stronger-suit? suit-1 suit-2)
+      (stronger-rank? rank-1 rank-2))))
+
+[(beats-hand? #{[:k :s]} #{[:q :d]})
+ (beats-hand? #{[:10 :h]} #{[:10 :s]})]
+----
+
+If the ranks are the same, the hand with the stronger suit wins, otherwise the stronger rank determines which hand wins.
+
+For two pairs, if the ranks are the same then the hand with a spade wins, otherwise the hand with the stronger rank wins:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::pair ::pair]
+  [hand-1 hand-2]
+  (let [[rank-1 suit-1] (first hand-1)
+        [     _ suit-2] (second hand-1)
+        [rank-3 suit-3] (first hand-2)]
+    (if (= rank-1 rank-3)
+      (contains? #{suit-1 suit-2} :s)
+      (stronger-rank? rank-1 rank-3))))
+
+[(beats-hand? #{[:1 :h][:1 :d]} #{[:j :s][:j :c]})
+ (beats-hand? #{[:7 :s][:7 :c]} #{[:9 :h][:9 :d]})]
+----
+
+For three of a kind:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::three-of-a-kind ::three-of-a-kind]
+  [hand-1 hand-2]
+  (let [[rank-1] (first hand-1)
+        [rank-2] (first hand-2)]
+    (stronger-rank? rank-1 rank-2)))
+
+[(beats-hand? #{[:q :h][:q :d][:q :s]} #{[:9 :s][:9 :c][:9 :h]})
+ (beats-hand? #{[:7 :s][:7 :c][:7 :h]} #{[:8 :h][:8 :d][:8 :s]})]
+----
+
+And so on for Straight, Flush, Full-house, Straight Flush and Poker. These are left as an exercise to the reader:
+
+[source, klipse]
+----
+(defmethod beats-hand? [::straight ::straight]
+  [straight-1 straight-2]
+  )
+
+(defmethod beats-hand? [::flush ::flush]
+  [flush-1 flush-2]
+  )
+
+(defmethod beats-hand? [::full-house ::full-house]
+  [full-house-1 full-house-2]
+  )
+
+(defmethod beats-hand? [::straight-flush ::straight-flush]
+  [straight-flush-1 straight-flush-2]
+  )
+
+(defmethod beats-hand? [::poker ::poker]
+  [poker-1 poker-2]
+  )
+----
+
+What about the cases where the two five card hands are different. For this we need one more handler:
+
+[source, klipse]
+----
+(def five-card-hand-rank [::straight-flush ::poker ::full-house ::flush ::straight])
+
+(defmethod beats-hand? [::five-card-hand ::five-card-hand]
+  [hand-1 hand-2]
+  (let [type-1 (first (s/conform ::five-card-hand hand-1))
+        type-2 (first (s/conform ::five-card-hand hand-2))]
+    (= type-1 (first (filter #{type-1 type-2} five-card-hand-rank)))))
+----
+
+Just like hold'em poker, the straight flush is the strongest and the straight is the weakest.
+
+For every other combination the hands are not compatible. We handle this using the default handler which just returns `false`:
+
+[source, klipse]
+----
+(defmethod beats-hand? :default
+  [_ _]
+  false)
+
+(beats-hand? #{[:2 :d] [:2 :s]} #{[:3 :h]})
+----
+
+Now that we can determine whether a hand is stronger than another one, let's move on to the game. The players take turns playing moves one after the other. We will need a way to determine who should play next:
+
+[source, klipse]
+----
+(defn find-next-player
+  "Determines the next player given the current-player and the number-of-players in the game."
+  [current-player number-of-players]
+  {:pre [(<= 2 number-of-players 4)
+         (or (nil? current-player)
+             (<= 0 current-player (dec number-of-players)))]}
+  (if (nil? current-player)
+    0
+    (mod (inc current-player) number-of-players)))
+----
+
+The diagram below shows what we are aiming for using an example with 3 players. A player notifies the server that he is making a move. If the move is a valid one the server updates the game state and pushes the new game state out to the players.
+
+image::/images/2017-10-22-big-two-channels.png[]
+
+We can keep track of the current state of a game with a map:
+[source, klipse]
+----
+{:number-of-players 2
+ :cards (deal-cards 2)
+ :moves [[0 #{}] [1 #{}]]
+ :move-channels []
+ :game-state-channels []}
+----
+
+Each move can either be a hand with the same number of cards and which is stronger than the previous one, or a `pass`. A player can choose to pass even if he has a stronger hand. With each move we need to verify that the player is not playing out of turn and that the hand he wants to play beats the previous one. If we use an atom to hold the current game state we can use a validator to make the 2 checks:
+
+[source, klipse]
+----
+(defn move-validator [{:keys [moves table-hand number-of-players]}]
+  (let [[[previous-player previous-hand] [last-player last-hand]] (take-last 2 moves)]
+    (and (= last-player (find-next-player previous-player number-of-players)) ;; check player is not playing out of turn
+         (if (= #{} last-hand)
+           true
+           (beats-hand? last-hand table-hand))))) ;; check if hand played beats the previous one
+
+(defn create-game
+  "Creates a game for n players."
+  [n]
+  {:pre [(<= 2 n 4)]}
+  (let [game (atom {:number-of-players n
+                    :cards (deal-cards n)
+                    :moves [[(- n 2) #{}] [(dec n) #{}]]
+                    :table-hand #{}
+                    :move-channels []
+                    :game-state-channels []}
+                   :validator move-validator)]
+    game))
+----
+
+Once a game is created we need a way for players to join it:
+
+[source, klipse]
+----
+(defn join-game [game]
+  (let [game-state-channel (async/chan)
+        move-channel       (async/chan)]
+    (swap! game
+           (fn [previous-game-state]
+             (let [{:keys [move-channels game-state-channels]} previous-game-state]
+               (assoc previous-game-state
+                 :move-channels (conj move-channels move-channel)
+                 :game-state-channels (conj game-state-channels game-state-channel)))))
+    (async.macros/go-loop []
+      (let [game-state (async/<! game-state-channel)]
+        (println (str "got game state from server: " game-state)))
+      (recur))
+    move-channel))
+----
+
+Then we need a function to transition the game state as moves are received:
+
+[source, klipse]
+----
+(defn move
+  "Simulates a player playing a hand. An empty hand means the player is passing."
+  [game player hand]
+  (swap! game
+         (fn [previous-game-state]
+           (let [{:keys [cards moves number-of-players table-hand]} previous-game-state
+                 player-cards (nth cards player)]
+             (if (clojure.set/superset? player-cards hand)
+               (assoc previous-game-state
+                      :cards (assoc cards player (clojure.set/difference player-cards hand))
+                      :moves (conj moves [player hand])
+                      :table-hand (if (not= #{} hand)
+                                    hand 
+                                    table-hand))
+               previous-game-state)))))
+----
+
+Once all the players have joined we need to start the game:
+
+[source, klipse]
+----
+(defn extract-relevant-game-state-for-player [game-state player-number]
+  (let [{:keys [moves cards table-hand number-of-players]} game-state]
+    {:table-hand table-hand
+     :card-counts (map count cards)
+     :turn (find-next-player (first (last moves)) number-of-players)
+     :cards (nth cards player-number)}))
+
+(defn move-watch [key game old-state new-state]
+  "Pushes new state to each player after a move is made."
+  (async.macros/go
+    (doseq [[i channel] (map-indexed vector (new-state :game-state-channels))]
+      (println (str "sending state to player " i ":") (extract-relevant-game-state-for-player new-state i))
+      (async/>! channel (extract-relevant-game-state-for-player new-state i)))))
+
+(defn start-game [game]
+  (add-watch game :game-move-watch move-watch)
+  (async.macros/go-loop []
+    (let [[message channel] (async/alts! (@game :move-channels))]
+      (println (str "got move from player: " message))
+      (move game (.indexOf (@game :move-channels) channel) message))
+    (recur)))
+----
+
+Notice that we attach a watch which pushes the new game state to the players over a channel. The watch actually sends a slightly modified version of the game state using the `extract-relevant-game-state-for-player` function because the players shouldn't know what cards their opponents hold. 
+
+Let's try it out:
+
+[source, klipse]
+----
+(def game (create-game 3))
+
+(def player-1-chan (join-game game))
+(def player-2-chan (join-game game))
+(def player-3-chan (join-game game))
+
+(start-game game)
+
+@game
+----
+
+Now we simulate a move played by player 1:
+
+[source, klipse]
+----
+(def player-1-cards (first (:cards @game)))
+
+(async.macros/go
+  (async/>! player-1-chan #{(first player-1-cards)}))
+
+@game
+----
+
+You can see that the state transition is allowed by the validator and the new game state is pushed to the other players by the watch. If we now make an invalid move the transition is not allowed. For example if player 1 attempts to play again before player 2 has played:
+
+[source, klipse]
+----
+(async.macros/go
+  (async/>! player-1-chan #{(second player-1-cards)}))
+
+@game
+----
+
+If you open your browser's inspector you should see `Error: Validator rejected reference state`.

@@ -126,9 +126,9 @@ vehicles
 ;; => {"HSLE328" [1 2], "JAFA017" [1 1]}
 ----
 
-`swap!` takes an atom (in this case `vehicles`), a function (in this case `conj`) and additional parameters (in this case `[["JAFA017"] [1 1]]`), reads the current value the atom refers to, applies the function to the value, and tells the atom to point to the value returned. These steps happen atomically. But what if when we want to mutate two identities in a transaction? We can't use two atoms as there is no way to `swap!` on both of them together. In this case we use `refs` and the `dosync` function:
+`swap!` takes an atom (in this case `vehicles`), a function (in this case `conj`) and additional parameters (in this case `[["JAFA017"] [1 1]]`), reads the current value the atom refers to, applies the function to the value, and tells the atom to point to the value returned. These steps happen atomically. But what if we want to mutate two identities in a transaction? We can't use two atoms as there is no way to `swap!` on both of them together. In this case we use `refs` and the `dosync` function:
 
-[source, clojure]
+[source, klipse]
 ----
 (def vehicles (ref {}))
 (def empty-parking-spaces (ref #{}))
@@ -180,4 +180,4 @@ Notice that with `dosync` the operations are happening within a transaction, so 
    (count @empty-parking-spaces))
 ----
 
-If you want to take a look at the complete sources they're on https://github.com/anthonygalea/garage-simulation[GitHub]. In the http://www.anthony-galea.com/blog/post/hello-parking-garage-meet-clojure.spec/[next post] we will take a look at how we can apply clojure.spec.
+If you want to take a look at the source it's on https://github.com/anthonygalea/garage-simulation[GitHub]. In the https://www.anthony-galea.com/blog/post/hello-parking-garage-meet-clojure.spec/[next post] we will take a look at how we can apply clojure.spec.

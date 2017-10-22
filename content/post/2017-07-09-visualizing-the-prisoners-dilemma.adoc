@@ -129,8 +129,8 @@ The grid you see below is a simulation running in your browser of a game called 
 
 (defn calculate-changed-strategies [previous-strategies next-strategies]
   (into #{}
-    (filter #(not= (previous-strategies %) (next-strategies %)))
-            (range (count previous-strategies))))
+    (filter #(not= (previous-strategies %) (next-strategies %))
+            (range (count previous-strategies)))))
 
 (defn get-last-decisions [matches-results changed-strategies]
   (reduce-kv (fn [scores match result]
@@ -533,8 +533,8 @@ Given any two frames with strategies we can find out which players have changed 
 
 (defn calculate-changed-strategies [previous-strategies next-strategies]
   (into #{}
-    (filter #(not= (previous-strategies %) (next-strategies %)))
-            (range (count previous-strategies))))
+    (filter #(not= (previous-strategies %) (next-strategies %))
+            (range (count previous-strategies)))))
 
 (calculate-changed-strategies frame-1 frame-2)
 
