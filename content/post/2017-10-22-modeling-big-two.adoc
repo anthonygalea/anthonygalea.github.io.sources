@@ -72,7 +72,6 @@ or 2 suits:
  (stronger-suit? :d :h)]
 ----
 
-
 And finally we can make a deck of cards:
 
 [source, klipse]

@@ -1,0 +1,15 @@
+@startuml
+
+node player1
+node server
+node player2
+node player3
+
+player1 -> server : (1) move
+player1 <- server : (2) game state
+
+server -> player2 : (2) game state
+
+server -down-> player3 : (2) game state
+
+@enduml
