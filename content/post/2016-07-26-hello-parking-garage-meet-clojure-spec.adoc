@@ -5,9 +5,11 @@ categories = ["clojure"]
 keywords = ["clojure spec", "introduction", "tutorial", "example"]
 +++
 
+:source-highlighter: pygments
+
 In this post, we will take the https://www.anthony-galea.com/blog/post/simulating-a-parking-garage-with-clojure-refs/[parking garage problem from the previous post] and see how `clojure.spec` might be applied. If you are new to clojure.spec you can check out the http://clojure.org/about/spec[rationale] and the  http://clojure.org/guides/spec[guide] on clojure.org. Let's start by specing the data. Recall that we used a map to state how many parking spaces are available on each garage level:
 
-[source, klipse]
+[source, clojure]
 ----
 (ns garage-simulation.core)
 
@@ -17,9 +19,9 @@ In this post, we will take the https://www.anthony-galea.com/blog/post/simulatin
 
 We could spec the components of this map `level` and `number-of-parking-spaces` as positive integers:
 
-[source, klipse]
+[source, clojure]
 ----
-(require '[cljs.spec :as s])
+(require '[clojure.spec :as s])
 
 (s/def ::level (s/and int? (s/or :zero zero? :positive pos?)))
 (s/def ::number-of-parking-spaces (s/and int? pos?))
@@ -27,73 +29,75 @@ We could spec the components of this map `level` and `number-of-parking-spaces` 
 
 `parking-spaces` can then be specd like this:
 
-[source, klipse]
+[source, clojure]
 ----
 (s/def ::parking-spaces (s/map-of ::level ::number-of-parking-spaces))
 ----
 
 We can then check the validity using `clojure.spec/valid?`:
 
-[source, klipse]
+[source, clojure]
 ----
 (s/valid? ::parking-spaces {0 15 1 10})
+=> true
 ----
 
 If we were to try an invalid map:
 
-[source, klipse]
+[source, clojure]
 ----
 (s/valid? ::parking-spaces {0 15 1 "10"})
+=> false
 ----
 
 If we're confused as to why our data is not valid, we can use the `clojure.spec/explain` function to figure out what's wrong:
 
-[source, klipse]
+[source, clojure]
 ----
 (s/explain ::parking-spaces {0 15 1 "10"})
+=> In: [1 1] val: "10" fails spec: :garage-simulation.core/number-of-parking-spaces at: [1] predicate: int?
 ----
 
 or `clojure.spec/explain-data` to get a map we can more easily traverse:
-[source, klipse]
+[source, clojure]
 ----
 (s/explain-data ::parking-spaces {0 15 1 "10"})
+=> #:clojure.spec{:problems ({:path [1], :pred int?, :val "10", :via [:garage-simulation.core/parking-spaces :garage-simulation.core/number-of-parking-spaces], :in [1 1]})}
 ----
 
 Using this spec we can even generate some valid samples using the `clojure.spec.gen/generate` or `clojure.spec.gen/sample` functions:
 
-[source, klipse]
+[source, clojure]
 ----
-(require '[cljs.spec.impl.gen :as g]
-         '[clojure.test.check :as t])
+(require '[clojure.spec.gen :as g]
+         '[clojure.spec.test :as t])
 
 (g/generate (s/gen ::parking-spaces))
+=> {2868014 31, 3118 28, 46838612 227837, 2631 940026, 109 959746, 275023 58, 61032 3846, 24482 11839, 4370470 92, 1826 412743, 47082 2125773, 190 236375948}
 ----
- => {2868014 31, 3118 28, 46838612 227837, 2631 940026, 109 959746, 275023 58, 61032 3846, 24482 11839, 4370470 92, 1826 412743, 47082 2125773, 190 236375948}
 
-[source, klipse]
+[source, clojure]
 ----
 (g/sample (s/gen ::parking-spaces))
+=> ({0 1, 2 3} {0 1, 1 1} {0 1, 1 189, 3 2} {1 1, 0 15, 3 1, 2 6} {0 1, 1 5, 4 5, 15 3, 22 6, 6 1, 3 1, 2 2, 8 5} {} {17 10, 5 10, 2 3} {0 7, 30 25, 48 22, 7 117, 10 19, 31 325} {0 2, 1 46, 39 677, 13 69, 6 9, 3 6, 2 712, 23 1, 19 31, 115 21, 5 5} {0 84, 1 2, 15 1, 355 37})
 ----
-
- => ({0 1, 2 3} {0 1, 1 1} {0 1, 1 189, 3 2} {1 1, 0 15, 3 1, 2 6} {0 1, 1 5, 4 5, 15 3, 22 6, 6 1, 3 1, 2 2, 8 5} {} {17 10, 5 10, 2 3} {0 7, 30 25, 48 22, 7 117, 10 19, 31 325} {0 2, 1 46, 39 677, 13 69, 6 9, 3 6, 2 712, 23 1, 19 31, 115 21, 5 5} {0 84, 1 2, 15 1, 355 37})
 
 At this point you can see that these samples don't really match reality because in parking garages levels usually start at 0 and increase consecutively. We could spec this on the map of course, but even better would be to switch to a data structure which already has these constraints i.e. just use a vector :)
 
-[source, klipse]
+[source, clojure]
 ----
 (def parking-spaces [15 10])
 
 (s/def ::parking-spaces (s/coll-of ::number-of-parking-spaces :kind vector?))
 
 (g/generate (s/gen ::parking-spaces))
-----
-
-;; => [359765 242401325 199244 8685 227771037 10073702 21779006 24302758 347572 6381197 84 1488130 1008076 293347674 135 3109580]
+=> [359765 242401325 199244 8685 227771037 10073702 21779006 24302758 347572 6381197 84 1488130 1008076 293347674 135 3109580]
 ;; might be tough to make it out of this garage :)
+----
 
 Having done this change we will need to tweak `intialize-garage!` a bit:
 
-[source, klipse]
+[source, clojure]
 ----
 (defn initialize-garage!
   "Sets the initial state of the garage."
@@ -135,7 +139,8 @@ Finally we can spec the map used to store the locations of the vehicles in the g
 ----
 (s/def ::vehicles (s/map-of ::licence-plate ::parking-space))
 
-(s/valid? ::vehicles {"ASDF001" [0 3]}) ;; => true
+(s/valid? ::vehicles {"ASDF001" [0 3]})
+=> true
 ----
 
 Now that we've specd the data let's move on to the functions. Starting with `initialize-garage!` we use `clojure.spec/fdef` and specify one argument, namely `::parking-spaces`:
@@ -183,35 +188,42 @@ And similarly for `exit-garage!` we can specify that the licence plate for the v
         :fn #(not (contains? (:ret %) (-> % :args :licence-plate))))
 ----
 
-If we turn on instrumentation on a function and then call it with invalid parameters we get an exception with the details of went wrong. In the following examples the first says "Sorry you gave me a number but I need a string", the second says "Sorry your licence plate doesn't match the regex":
+If we turn on instrumentation on a function and then call it with invalid parameters we get an exception with the details of went wrong.
 
 [source, clojure]
 ----
 (t/instrument `enter-garage!)
 
 (enter-garage! 3)
-; ExceptionInfo Call to #'garage-simulation.core/enter-garage! did not conform to spec:
-; In: [0] val: 3 fails spec: :garage-simulation.core/licence-plate at: [:args :licence-plate] predicate: string?
-; :clojure.spec/args  (3)
-; :clojure.spec/failure  :instrument
-; :clojure.spec.test/caller  {:file "form-init6892093246791959693.clj", :line 82, :var-scope garage-simulation.core/eval20779}
-;   clojure.core/ex-info (core.clj:4724)
-
-(enter-garage! "ASDF01")
-; ExceptionInfo Call to #'garage-simulation.core/enter-garage! did not conform to spec:
-; In: [0] val: "ASDF01" fails spec: :garage-simulation.core/licence-plate at: [:args :licence-plate] predicate: (re-matches licence-plate-regex %)
-; :clojure.spec/args  ("ASDF01")
-; :clojure.spec/failure  :instrument
-; :clojure.spec.test/caller  {:file "form-init6892093246791959693.clj", :line 75, :var-scope garage-simulation.core/eval20777}
-;   clojure.core/ex-info (core.clj:4724)
+ ExceptionInfo Call to #'garage-simulation.core/enter-garage! did not conform to spec:
+ In: [0] val: 3 fails spec: :garage-simulation.core/licence-plate at: [:args :licence-plate] predicate: string?
+ :clojure.spec/args  (3)
+ :clojure.spec/failure  :instrument
+ :clojure.spec.test/caller  {:file "form-init6892093246791959693.clj", :line 82, :var-scope garage-simulation.core/eval20779}
+   clojure.core/ex-info (core.clj:4724)
 ----
+
+This is saying "Sorry you gave me a number but I need a string".
+
+[source, clojure]
+----
+(enter-garage! "ASDF01")
+ ExceptionInfo Call to #'garage-simulation.core/enter-garage! did not conform to spec:
+ In: [0] val: "ASDF01" fails spec: :garage-simulation.core/licence-plate at: [:args :licence-plate] predicate: (re-matches licence-plate-regex %)
+ :clojure.spec/args  ("ASDF01")
+ :clojure.spec/failure  :instrument
+ :clojure.spec.test/caller  {:file "form-init6892093246791959693.clj", :line 75, :var-scope garage-simulation.core/eval20777}
+   clojure.core/ex-info (core.clj:4724)
+----
+
+This says "Sorry your licence plate doesn't match the regex".
 
 Another thing we can do with our specs is something called `property based testing`. In `unit testing` we usually write tests for specific test cases like we did in the previous post with midje. In property based testing we use a framework (in this case https://github.com/clojure/test.check[test.check]) to automatically generate a range of test cases against which the invariants defined in our spec are verified. We do this using the `clojure.spec.test/check` function:
 
 [source, clojure]
 ----
 (clojure.spec.test/check `enter-garage!)
-; ExceptionInfo Couldn't satisfy such-that predicate after 100 tries.  clojure.core/ex-info (core.clj:4724)
+=> ExceptionInfo Couldn't satisfy such-that predicate after 100 tries.  clojure.core/ex-info (core.clj:4724)
 ----
 
 Whoops! The problem here is that `test.check` tried to generate random strings for licence plates for `enter-garage!` but gave up after a 100 tries because they all did not conform to the regex we defined earlier. This would also happen if we directly tried to generate samples for licence plates:
@@ -219,13 +231,15 @@ Whoops! The problem here is that `test.check` tried to generate random strings f
 [source, clojure]
 ----
 (g/sample (s/gen ::licence-plate))
-; ExceptionInfo Couldn't satisfy such-that predicate after 100 tries.  clojure.core/ex-info (core.clj:4724)
+=> ExceptionInfo Couldn't satisfy such-that predicate after 100 tries.  clojure.core/ex-info (core.clj:4724)
 ----
 
 We can fix this by associating a generator with the spec for licence plates. We can use the https://github.com/gfredericks/test.chuck/[test.chuck] library for this which provides a handy `string-from-regex` generator:
 
 [source, clojure]
 ----
+(require '[com.gfredericks.test.chuck.generators :as cg])
+
 (s/def ::licence-plate
   (s/with-gen
     (s/and string? #(re-matches licence-plate-regex %))
@@ -237,7 +251,7 @@ So now we can generate licence plates at will:
 [source, clojure]
 ----
 (g/sample (s/gen ::licence-plate))
-;; => ("YZJY672" "WDPR193" "BMAX543" "BIEL908" "VNJC192" "ZKFA361" "HLYS035" "DAIA703" "WFGS654" "LPSX140")
+=> ("YZJY672" "WDPR193" "BMAX543" "BIEL908" "VNJC192" "ZKFA361" "HLYS035" "DAIA703" "WFGS654" "LPSX140")
 ----
 
 Let's move on to verifying the invariant for `enter-garage!`:
@@ -245,14 +259,14 @@ Let's move on to verifying the invariant for `enter-garage!`:
 [source, clojure]
 ----
 (t/check `enter-garage!)
-; ({:spec #object[clojure.spec$fspec_impl$reify__13789 0x1fdaac28 "clojure.spec$fspec_impl$reify__13789@1fdaac28"], :clojure.spec.test.check/ret {:result #error {
-;  :cause "Specification-based check failed"
-;  :data {:clojure.spec/problems [{:path [:fn], :pred (contains? (:ret %) (-> % :args :licence-plate)), :val {:args {:licence-plate "SCWE626"}, :ret nil}, :via [], :in []}], :clojure.spec.test/args ("SCWE626"), :clojure.spec.test/val {:args {:licence-plate "SCWE626"}, :ret nil}, :clojure.spec/failure :check-failed}
-;  :via
-;  [{:type clojure.lang.ExceptionInfo
-;    :message "Specification-based check failed"
-;    :data {:clojure.spec/problems [{:path [:fn], :pred (contains? (:ret %) (-> % :args :licence-plate)), :val {:args {:licence-plate "SCWE626"}, :ret nil}, :via [], :in []}], :clojure.spec.test/args ("SCWE626"), :clojure.spec.test/val {:args {:licence-plate "SCWE626"}, :ret nil}, :clojure.spec/failure :check-failed}
-;   ...
+=> ({:spec #object[clojure.spec$fspec_impl$reify__13789 0x1fdaac28 "clojure.spec$fspec_impl$reify__13789@1fdaac28"], :clojure.spec.test.check/ret {:result #error {
+  :cause "Specification-based check failed"
+  :data {:clojure.spec/problems [{:path [:fn], :pred (contains? (:ret %) (-> % :args :licence-plate)), :val {:args {:licence-plate "SCWE626"}, :ret nil}, :via [], :in []}], :clojure.spec.test/args ("SCWE626"), :clojure.spec.test/val {:args {:licence-plate "SCWE626"}, :ret nil}, :clojure.spec/failure :check-failed}
+  :via
+  [{:type clojure.lang.ExceptionInfo
+    :message "Specification-based check failed"
+    :data {:clojure.spec/problems [{:path [:fn], :pred (contains? (:ret %) (-> % :args :licence-plate)), :val {:args {:licence-plate "SCWE626"}, :ret nil}, :via [], :in []}], :clojure.spec.test/args ("SCWE626"), :clojure.spec.test/val {:args {:licence-plate "SCWE626"}, :ret nil}, :clojure.spec/failure :check-failed}
+   ...
 ----
 
 This doesn't look good at all :) The reason it happens is that when `check` is called it generates a large number of inputs which in our case exceeds the available space in the garage. This actually points out a problem in the invariant i.e. the vehicle doesn't make it into the garage if there is no space available. We can redefine the invariant to accommodate this:
@@ -266,7 +280,7 @@ This doesn't look good at all :) The reason it happens is that when `check` is c
                  contains? (:ret %) (-> % :args :licence-plate)))
 
 (t/check `enter-garage!)
-; ({:spec #object[clojure.spec$fspec_impl$reify__13789 0x4d8e87aa "clojure.spec$fspec_impl$reify__13789@4d8e87aa"], :clojure.spec.test.check/ret {:result true, :num-tests 1000, :seed 1469535504589}, :sym garage-simulation.core/enter-garage!})
+=> ({:spec #object[clojure.spec$fspec_impl$reify__13789 0x4d8e87aa "clojure.spec$fspec_impl$reify__13789@4d8e87aa"], :clojure.spec.test.check/ret {:result true, :num-tests 1000, :seed 1469535504589}, :sym garage-simulation.core/enter-garage!})
 ----
 
 Much better. Happy specing!

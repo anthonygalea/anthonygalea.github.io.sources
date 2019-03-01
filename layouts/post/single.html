@@ -28,7 +28,7 @@
         {{ end }}
       </div> -->
 
-    {{ $.Scratch.Add "display_see_also" false }}
+    {{ $.Scratch.Set "display_see_also" false }}
     {{ $page_link := .Permalink }}
     {{ $categories := .Params.categories }}
     {{ range .Site.Pages }}

@@ -15,7 +15,7 @@ We're going to represent a card as a vector with a rank and a suit. For example 
   (:require-macros [cljs.core.async.macros :as async.macros])
   (:require [cljs.core.async :as async]
             [clojure.set]
-            [clojure.spec :as s]))
+            [cljs.spec.alpha :as s]))
 
 (def ranks [:2 :1 :k :q :j :10 :9 :8 :7 :6 :5 :4 :3])
 
@@ -466,7 +466,7 @@ Then we need a function to transition the game state as moves are received:
                       :cards (assoc cards player (clojure.set/difference player-cards hand))
                       :moves (conj moves [player hand])
                       :table-hand (if (not= #{} hand)
-                                    hand 
+                                    hand
                                     table-hand))
                previous-game-state)))))
 ----
@@ -498,7 +498,7 @@ Once all the players have joined we need to start the game:
     (recur)))
 ----
 
-Notice that we attach a watch which pushes the new game state to the players over a channel. The watch actually sends a slightly modified version of the game state using the `extract-relevant-game-state-for-player` function because the players shouldn't know what cards their opponents hold. 
+Notice that we attach a watch which pushes the new game state to the players over a channel. The watch actually sends a slightly modified version of the game state using the `extract-relevant-game-state-for-player` function because the players shouldn't know what cards their opponents hold.
 
 Let's try it out:
 
